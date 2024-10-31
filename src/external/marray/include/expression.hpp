@@ -1,7 +1,11 @@
 #ifndef _MARRAY_EXPRESSION_HPP_
 #define _MARRAY_EXPRESSION_HPP_
 
+#if defined(__AVX512F__) || defined(__AVX__) || defined(__SSE4_1__)
+
 #include <x86intrin.h>
+
+#endif
 
 #include "utility.hpp"
 #include "vector.hpp"

@@ -1,5 +1,8 @@
 #include "cpuid.hpp"
 
+#include <cstdlib>
+#include <string>
+
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
 
 namespace tblis
@@ -246,7 +249,10 @@ int get_cpu_type(int& model, int& part, int& features)
 
     auto pos = ptno.find("0x");
     TBLIS_ASSERT(pos != std::string::npos);
-    part = strtoi(ptno, pos, 16);
+
+    // part = strtoi(ptno, pos, 16);
+    auto ptno_substr = ptno.substr(pos, 16);
+    part = std::stoi(ptno, &pos, 16);
 
     return VENDOR_ARM;
 }
