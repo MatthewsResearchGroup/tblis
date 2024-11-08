@@ -41,8 +41,8 @@ class scatter_matrix : public abstract_matrix_adapter<scatter_matrix,scatter_mat
 
             const len_type m = A.length( trans);
             const len_type k = A.length(!trans);
-            const stride_type* rscat = A.scatter( trans);
-            const stride_type* cscat = A.scatter(!trans);
+            const stride_type* rscat = A.scatter( trans) + A.offset( trans);
+            const stride_type* cscat = A.scatter(!trans) + A.offset(!trans);
 
             const len_type m_p = ceil_div(m, MR)*ME;
             const len_type k_p = round_up(k, KR);

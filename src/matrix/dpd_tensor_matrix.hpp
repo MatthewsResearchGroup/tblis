@@ -258,6 +258,7 @@ class dpd_tensor_matrix : public abstract_matrix_adapter<dpd_tensor_matrix,dpd_t
             len_type m = stl_ext::sum(block_size(0));
             len_type n = stl_ext::sum(block_size(1));
             bool row_major = !stride[0].empty() &&
+                             !dims(1).empty() &&
                              stride[0][dims(1)[0]] == 1 &&
                              n > 1;
 

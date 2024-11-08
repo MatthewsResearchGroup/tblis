@@ -48,7 +48,7 @@ void block_to_full(const communicator& comm, const config& cfg,
         {
             auto data_A = local_A.data() + (A.data(i) - A.data(0));
             auto factor_A = A.factor(i);
-            auto idx_A = A.indices(i);
+            auto idx_A = A.indexed_dimension() ? A.indices(i) : row_view<const len_type>{};
 
             auto data_A2 = A2.data();
             for (auto i : range(dense_ndim_A))
@@ -96,7 +96,7 @@ void full_to_block(const communicator& comm, const config& cfg,
         {
             auto data_A = local_A.data() + (A.data(i) - A.data(0));
             auto factor_A = A.factor(i);
-            auto idx_A = A.indices(i);
+            auto idx_A = A.indexed_dimension() ? A.indices(i) : row_view<const len_type>{};
 
             auto data_A2 = A2.data();
             for (auto i : range(dense_ndim_A))
