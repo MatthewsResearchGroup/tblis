@@ -1,5 +1,5 @@
 #include "indexed_dpd/indexed_dpd_marray.hpp"
-#include "gtest/gtest.h"
+#include "catch_amalgamated.hpp"
 
 using namespace std;
 using namespace MArray;
@@ -53,62 +53,62 @@ static stride_type offsets[6][8] =
 };
 
 #define CHECK_INDEXED_DPD_VARRAY_RESET(v) \
-    EXPECT_EQ(0u, v.dimension()); \
-    EXPECT_EQ(0u, v.dense_dimension()); \
-    EXPECT_EQ(0u, v.indexed_dimension()); \
-    EXPECT_EQ(1u, v.num_indices()); \
-    EXPECT_EQ((dim_vector{}), v.permutation()); \
-    EXPECT_EQ((matrix<len_type>{}), v.lengths()); \
-    EXPECT_EQ(0u, v.data().size());
+    CHECK(v.dimension() == 0u); \
+    CHECK(v.dense_dimension() == 0u); \
+    CHECK(v.indexed_dimension() == 0u); \
+    CHECK(v.num_indices() == 1u); \
+    CHECK(v.permutation() == dim_vector{}); \
+    CHECK(v.lengths() == matrix<len_type>{}); \
+    CHECK(v.data().size() == 0u);
 
-#define CHECK_INDEXED_DPD_VARRAY(v,j,value,...) \
-    SCOPED_TRACE(j); \
-    EXPECT_EQ(6u, v.dimension()); \
-    EXPECT_EQ(4u, v.dense_dimension()); \
-    EXPECT_EQ(2u, v.indexed_dimension()); \
-    EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}}), v.lengths()); \
-    EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v.dense_lengths()); \
-    EXPECT_EQ((len_vector{2, 5}), v.indexed_lengths()); \
-    EXPECT_EQ(3u, v.num_indices()); \
-    EXPECT_EQ((irrep_vector{1, 1}), v.indexed_irreps()); \
-    EXPECT_EQ((matrix<len_type>{{0, 0}, {1, 3}, {0, 3}}), v.indices()); \
-    EXPECT_EQ(value, v.data(0)[0]); \
-    EXPECT_EQ(1u, v.irrep()); \
-    EXPECT_EQ(2u, v.num_irreps()); \
-    EXPECT_EQ(perms[j], v.permutation()); \
+#define CHECK_INDEXED_DPD_VARRAY(v,j,value) \
+    INFO("j = " << j); \
+    CHECK(v.dimension() == 6u); \
+    CHECK(v.dense_dimension() == 4u); \
+    CHECK(v.indexed_dimension() == 2u); \
+    CHECK(v.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}}); \
+    CHECK(v.dense_lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}); \
+    CHECK(v.indexed_lengths() == len_vector{2, 5}); \
+    CHECK(v.num_indices() == 3u); \
+    CHECK(v.indexed_irreps() == irrep_vector{1, 1}); \
+    CHECK(v.indices() == matrix<len_type>{{0, 0}, {1, 3}, {0, 3}}); \
+    CHECK(v.data(0)[0] == value); \
+    CHECK(v.irrep() == 1u); \
+    CHECK(v.num_irreps() == 2u); \
+    CHECK(v.permutation() == perms[j]); \
     \
     for (int m = 0;m < 3u;m++) \
     { \
-        SCOPED_TRACE(m); \
+        INFO("m = " << m); \
         { \
             auto vs = v[m](1,0,0,0); \
-            EXPECT_EQ(v.data(m) + offsets[j][0], vs.data()); \
+            CHECK(vs.data() == v.data(m) + offsets[j][0]); \
             for (int k = 0;k < 4;k++) \
             { \
-                SCOPED_TRACE(k); \
-                EXPECT_EQ(lengths[0][k], vs.length(k)); \
-                EXPECT_EQ(strides[j][0][k], vs.stride(k)); \
+                INFO("k = " << k); \
+                CHECK(vs.length(k) == lengths[0][k]); \
+                CHECK(vs.stride(k) == strides[j][0][k]); \
             } \
         } \
         \
         { \
             auto vs = v[m]({0,1,0,0}); \
-            EXPECT_EQ(v.data(m) + offsets[j][1], vs.data()); \
-            EXPECT_EQ(lengths[1], vs.lengths()); \
-            EXPECT_EQ(strides[j][1], vs.strides()); \
+            CHECK(vs.data() == v.data(m) + offsets[j][1]); \
+            CHECK(vs.lengths() == lengths[1]); \
+            CHECK(vs.strides() == strides[j][1]); \
         } \
         \
         for (int i = 2;i < 8;i++) \
         { \
-            SCOPED_TRACE(i); \
+            INFO("i = " << i); \
             auto vs = v[m](irreps[i]); \
-            EXPECT_EQ(v.data(m) + offsets[j][i], vs.data()); \
-            EXPECT_EQ(lengths[i], vs.lengths()); \
-            EXPECT_EQ(strides[j][i], vs.strides()); \
+            CHECK(vs.data() == v.data(m) + offsets[j][i]); \
+            CHECK(vs.lengths() == lengths[i]); \
+            CHECK(vs.strides() == strides[j][i]); \
         } \
     }
 
-TEST(indexed_dpd_varray, constructor)
+TEST_CASE("indexed_dpd_varray::constructor")
 {
     indexed_dpd_marray<double> v1;
     CHECK_INDEXED_DPD_VARRAY_RESET(v1)
@@ -137,7 +137,7 @@ TEST(indexed_dpd_varray, constructor)
     }
 }
 
-TEST(indexed_dpd_varray, reset)
+TEST_CASE("indexed_dpd_varray::reset")
 {
     indexed_dpd_marray<double> v1;
     CHECK_INDEXED_DPD_VARRAY_RESET(v1)
@@ -172,7 +172,7 @@ TEST(indexed_dpd_varray, reset)
     CHECK_INDEXED_DPD_VARRAY_RESET(v1)
 }
 
-TEST(indexed_dpd_varray, view)
+TEST_CASE("indexed_dpd_varray::view")
 {
     indexed_dpd_marray<double> v1(1, 2, {{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}},
                                   {1, 1}, {{0, 0}, {1, 3}, {0, 3}}, 1.0, layouts[0]);
@@ -183,41 +183,41 @@ TEST(indexed_dpd_varray, view)
     auto v3 = v1.view();
     CHECK_INDEXED_DPD_VARRAY(v3, 0, 1.0)
 
-    auto v4 = const_cast<const indexed_dpd_marray<double>&>(v1).view();
+    auto v4 = std::as_const(v1).view();
     CHECK_INDEXED_DPD_VARRAY(v4, 0, 1.0)
 }
 
-TEST(indexed_dpd_varray, access)
+TEST_CASE("indexed_dpd_varray::access")
 {
     indexed_dpd_marray<double> v1(1, 2, {{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}},
                                   {1, 1}, {{0, 0}, {1, 3}, {0, 3}}, 1.0, layouts[0]);
 
     auto v2 = v1[0];
-    EXPECT_EQ(v1.data(0), v2.data());
-    EXPECT_EQ(1u, v2.irrep());
-    EXPECT_EQ(2u, v2.num_irreps());
-    EXPECT_EQ(perms[0], v2.permutation());
-    EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v2.lengths());
+    CHECK(v2.data() == v1.data(0));
+    CHECK(v2.irrep() == 1u);
+    CHECK(v2.num_irreps() == 2u);
+    CHECK(v2.permutation() == perms[0]);
+    CHECK(v2.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}});
 
-    auto v3 = const_cast<const indexed_dpd_marray<double>&>(v1)[2];
-    EXPECT_EQ(v1.data(2), v3.data());
-    EXPECT_EQ(1u, v3.irrep());
-    EXPECT_EQ(2u, v3.num_irreps());
-    EXPECT_EQ(perms[0], v3.permutation());
-    EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v3.lengths());
+    auto v3 = std::as_const(v1)[2];
+    CHECK(v3.data() == v1.data(2));
+    CHECK(v3.irrep() == 1u);
+    CHECK(v3.num_irreps() == 2u);
+    CHECK(v3.permutation() == perms[0]);
+    CHECK(v3.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}});
 
     indexed_dpd_marray<double> v4(0, 2, {{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}},
                                   {0, 1}, {{0, 0}, {1, 3}, {0, 3}}, 1.0, layouts[0]);
 
     auto v5 = v4[1];
-    EXPECT_EQ(v4.data(1), v5.data());
-    EXPECT_EQ(1u, v5.irrep());
-    EXPECT_EQ(2u, v5.num_irreps());
-    EXPECT_EQ(perms[0], v5.permutation());
-    EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v5.lengths());
+    CHECK(v5.data() == v4.data(1));
+    CHECK(v5.irrep() == 1u);
+    CHECK(v5.num_irreps() == 2u);
+    CHECK(v5.permutation() == perms[0]);
+    CHECK(v5.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}});
 }
 
-TEST(indexed_dpd_varray, index_iteration)
+TEST_CASE("indexed_dpd_varray::index_iteration")
 {
     int indices[3][2] = {{0, 0}, {1, 3}, {0, 3}};
     array<int,3> visited;
@@ -230,7 +230,7 @@ TEST(indexed_dpd_varray, index_iteration)
     v1.for_each_index(
     [&](const dpd_marray_view<double>& v, const index_vector& idx)
     {
-        EXPECT_EQ(idx.size(), 2u);
+        CHECK(2u == idx.size());
         len_type i = idx[0];
         len_type j = idx[1];
         bool found = false;
@@ -238,28 +238,26 @@ TEST(indexed_dpd_varray, index_iteration)
         {
             if (i == indices[m][0] && j == indices[m][1])
             {
-                EXPECT_EQ(v1.data(m), v.data());
+                CHECK(v.data() == v1.data(m));
                 found = true;
                 visited[m]++;
             }
         }
-        EXPECT_TRUE(found);
-        EXPECT_EQ(1u, v.irrep());
-        EXPECT_EQ(2u, v.num_irreps());
-        EXPECT_EQ(perms[0], v.permutation());
-        EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v.lengths());
+        CHECK(found);
+        CHECK(v.irrep() == 1u);
+        CHECK(v.num_irreps() == 2u);
+        CHECK(v.permutation() == perms[0]);
+        CHECK(v.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}});
     });
 
     for (len_type i = 0;i < 3;i++)
-    {
-        EXPECT_EQ(visited[i], 1);
-    }
+        CHECK(visited[i]);
 
     visited = {};
     v2.for_each_index(
     [&](const dpd_marray_view<const double>& v, const index_vector& idx)
     {
-        EXPECT_EQ(idx.size(), 2u);
+        CHECK(2u == idx.size());
         len_type i = idx[0];
         len_type j = idx[1];
         bool found = false;
@@ -267,22 +265,20 @@ TEST(indexed_dpd_varray, index_iteration)
         {
             if (i == indices[m][0] && j == indices[m][1])
             {
-                EXPECT_EQ(v2.data(m), v.data());
+                CHECK(v.data() == v2.data(m));
                 found = true;
                 visited[m]++;
             }
         }
-        EXPECT_TRUE(found);
-        EXPECT_EQ(1u, v.irrep());
-        EXPECT_EQ(2u, v.num_irreps());
-        EXPECT_EQ(perms[0], v.permutation());
-        EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v.lengths());
+        CHECK(found);
+        CHECK(v.irrep() == 1u);
+        CHECK(v.num_irreps() == 2u);
+        CHECK(v.permutation() == perms[0]);
+        CHECK(v.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}});
     });
 
     for (len_type i = 0;i < 3;i++)
-    {
-        EXPECT_EQ(visited[i], 1);
-    }
+        CHECK(visited[i]);
 
     visited = {};
     v1.for_each_index<4,2>(
@@ -293,22 +289,20 @@ TEST(indexed_dpd_varray, index_iteration)
         {
             if (i == indices[m][0] && j == indices[m][1])
             {
-                EXPECT_EQ(v1.data(m), v.data());
+                CHECK(v.data() == v1.data(m));
                 found = true;
                 visited[m]++;
             }
         }
-        EXPECT_TRUE(found);
-        EXPECT_EQ(1u, v.irrep());
-        EXPECT_EQ(2u, v.num_irreps());
-        EXPECT_EQ(perms[0], v.permutation());
-        EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v.lengths());
+        CHECK(found);
+        CHECK(v.irrep() == 1u);
+        CHECK(v.num_irreps() == 2u);
+        CHECK(v.permutation() == perms[0]);
+        CHECK(v.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}});
     });
 
     for (len_type i = 0;i < 3;i++)
-    {
-        EXPECT_EQ(visited[i], 1);
-    }
+        CHECK(visited[i]);
 
     visited = {};
     v2.for_each_index<4,2>(
@@ -319,22 +313,20 @@ TEST(indexed_dpd_varray, index_iteration)
         {
             if (i == indices[m][0] && j == indices[m][1])
             {
-                EXPECT_EQ(v2.data(m), v.data());
+                CHECK(v.data() == v2.data(m));
                 found = true;
                 visited[m]++;
             }
         }
-        EXPECT_TRUE(found);
-        EXPECT_EQ(1u, v.irrep());
-        EXPECT_EQ(2u, v.num_irreps());
-        EXPECT_EQ(perms[0], v.permutation());
-        EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v.lengths());
+        CHECK(found);
+        CHECK(v.irrep() == 1u);
+        CHECK(v.num_irreps() == 2u);
+        CHECK(v.permutation() == perms[0]);
+        CHECK(v.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}});
     });
 
     for (len_type i = 0;i < 3;i++)
-    {
-        EXPECT_EQ(visited[i], 1);
-    }
+        CHECK(visited[i]);
 
     indexed_dpd_marray<double> v3(0, 2, {{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}},
                                   {0, 1}, {{0, 0}, {1, 3}, {0, 3}}, 1.0, layouts[0]);
@@ -343,7 +335,7 @@ TEST(indexed_dpd_varray, index_iteration)
     v3.for_each_index(
     [&](const dpd_marray_view<double>& v, const index_vector& idx)
     {
-        EXPECT_EQ(idx.size(), 2u);
+        CHECK(2u == idx.size());
         len_type i = idx[0];
         len_type j = idx[1];
         bool found = false;
@@ -351,25 +343,23 @@ TEST(indexed_dpd_varray, index_iteration)
         {
             if (i == indices[m][0] && j == indices[m][1])
             {
-                EXPECT_EQ(v3.data(m), v.data());
+                CHECK(v.data() == v3.data(m));
                 found = true;
                 visited[m]++;
             }
         }
-        EXPECT_TRUE(found);
-        EXPECT_EQ(1u, v.irrep());
-        EXPECT_EQ(2u, v.num_irreps());
-        EXPECT_EQ(perms[0], v.permutation());
-        EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v.lengths());
+        CHECK(found);
+        CHECK(v.irrep() == 1u);
+        CHECK(v.num_irreps() == 2u);
+        CHECK(v.permutation() == perms[0]);
+        CHECK(v.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}});
     });
 
     for (len_type i = 0;i < 3;i++)
-    {
-        EXPECT_EQ(visited[i], 1);
-    }
+        CHECK(visited[i]);
 }
 
-TEST(indexed_dpd_varray, element_iteration)
+TEST_CASE("indexed_dpd_varray::element_iteration")
 {
     array<len_vector,3> indices = {{{0, 0}, {1, 3}, {0, 3}}};
     array<array<int,3>,31> visited;
@@ -382,182 +372,163 @@ TEST(indexed_dpd_varray, element_iteration)
     v1.for_each_element(
     [&](double& v, const irrep_vector& irreps, const len_vector& idx)
     {
-        EXPECT_EQ(irreps.size(), 5u);
-        EXPECT_EQ(idx.size(), 5u);
+        CHECK(5u == irreps.size());
+        CHECK(5u == idx.size());
         int a = irreps[0];
         int b = irreps[1];
         int c = irreps[2];
         int d = irreps[3];
         int e = irreps[4];
-        EXPECT_LT(a, 2u);
-        EXPECT_LT(b, 2u);
-        EXPECT_LT(c, 2u);
-        EXPECT_EQ(d, 1u);
-        EXPECT_EQ(e, 1u);
-        EXPECT_EQ(a^b^c^d^e, 0u);
+        CHECK(a < 2u);
+        CHECK(b < 2u);
+        CHECK(c < 2u);
+        CHECK(1u == d);
+        CHECK(1u == e);
+        CHECK((a^b^c^d^e) == 0u);
         len_type i = idx[0];
         len_type j = idx[1];
         len_type k = idx[2];
         len_type l = idx[3];
         len_type m = idx[4];
-        EXPECT_GE(i, 0);
-        EXPECT_LT(i, len[0][a]);
-        EXPECT_GE(j, 0);
-        EXPECT_LT(j, len[1][b]);
-        EXPECT_GE(k, 0);
-        EXPECT_LT(k, len[2][c]);
+        CHECK(i >= 0);
+        CHECK(i < len[0][a]);
+        CHECK(j >= 0);
+        CHECK(j < len[1][b]);
+        CHECK(k >= 0);
+        CHECK(k < len[2][c]);
         bool found = false;
         for (int n = 0;n < 3;n++)
         {
             if (l == indices[n][0] && m == indices[n][1])
             {
                 auto v3 = v1[n](a, b, c);
-                EXPECT_EQ(&v, &v3(i, j, k));
+                CHECK(&v3(i, j, k) == &v);
                 visited[&v - v1.data(n)][n]++;
                 found = true;
             }
         }
-        EXPECT_TRUE(found);
+        CHECK(found);
     });
 
     for (len_type i = 0;i < 31;i++)
-    {
-        for (len_type j = 0;j < 3;j++)
-        {
-            EXPECT_EQ(visited[i][j], 1);
-        }
-    }
+    for (len_type j = 0;j < 3;j++)
+        CHECK(visited[i][j]);
 
     visited = {};
     v2.for_each_element(
     [&](const double& v, const irrep_vector& irreps, const len_vector& idx)
     {
-        EXPECT_EQ(irreps.size(), 5u);
-        EXPECT_EQ(idx.size(), 5u);
+        CHECK(5u == irreps.size());
+        CHECK(5u == idx.size());
         int a = irreps[0];
         int b = irreps[1];
         int c = irreps[2];
         int d = irreps[3];
         int e = irreps[4];
-        EXPECT_LT(a, 2u);
-        EXPECT_LT(b, 2u);
-        EXPECT_LT(c, 2u);
-        EXPECT_EQ(d, 1u);
-        EXPECT_EQ(e, 1u);
-        EXPECT_EQ(a^b^c^d^e, 0u);
+        CHECK(a < 2u);
+        CHECK(b < 2u);
+        CHECK(c < 2u);
+        CHECK(1u == d);
+        CHECK(1u == e);
+        CHECK((a^b^c^d^e) == 0u);
         len_type i = idx[0];
         len_type j = idx[1];
         len_type k = idx[2];
         len_type l = idx[3];
         len_type m = idx[4];
-        EXPECT_GE(i, 0);
-        EXPECT_LT(i, len[0][a]);
-        EXPECT_GE(j, 0);
-        EXPECT_LT(j, len[1][b]);
-        EXPECT_GE(k, 0);
-        EXPECT_LT(k, len[2][c]);
+        CHECK(i >= 0);
+        CHECK(i < len[0][a]);
+        CHECK(j >= 0);
+        CHECK(j < len[1][b]);
+        CHECK(k >= 0);
+        CHECK(k < len[2][c]);
         bool found = false;
         for (int n = 0;n < 3;n++)
         {
             if (l == indices[n][0] && m == indices[n][1])
             {
-                auto v3 = v2[n](a, b, c);
-                EXPECT_EQ(&v, &v3(i, j, k));
+                CHECK(&v2[n](a, b, c)(i, j, k) == &v);
                 visited[&v - v2.data(n)][n]++;
                 found = true;
             }
         }
-        EXPECT_TRUE(found);
+        CHECK(found);
     });
 
     for (len_type i = 0;i < 31;i++)
-    {
-        for (len_type j = 0;j < 3;j++)
-        {
-            EXPECT_EQ(visited[i][j], 1);
-        }
-    }
+    for (len_type j = 0;j < 3;j++)
+        CHECK(visited[i][j]);
 
     visited = {};
     v1.for_each_element<3,2>(
     [&](double& v, int a, int b, int c, int d, int e,
         len_type i, len_type j, len_type k, len_type l, len_type m)
     {
-        EXPECT_LT(a, 2u);
-        EXPECT_LT(b, 2u);
-        EXPECT_LT(c, 2u);
-        EXPECT_EQ(d, 1u);
-        EXPECT_EQ(e, 1u);
-        EXPECT_EQ(a^b^c^d^e, 0u);
-        EXPECT_GE(i, 0);
-        EXPECT_LT(i, len[0][a]);
-        EXPECT_GE(j, 0);
-        EXPECT_LT(j, len[1][b]);
-        EXPECT_GE(k, 0);
-        EXPECT_LT(k, len[2][c]);
+        CHECK(a < 2u);
+        CHECK(b < 2u);
+        CHECK(c < 2u);
+        CHECK(1u == d);
+        CHECK(1u == e);
+        CHECK((a^b^c^d^e) == 0u);
+        CHECK(i >= 0);
+        CHECK(i < len[0][a]);
+        CHECK(j >= 0);
+        CHECK(j < len[1][b]);
+        CHECK(k >= 0);
+        CHECK(k < len[2][c]);
         bool found = false;
         for (int n = 0;n < 3;n++)
         {
             if (l == indices[n][0] && m == indices[n][1])
             {
-                auto v3 = v1[n](a, b, c);
-                EXPECT_EQ(&v, &v3(i, j, k));
+                CHECK(&v1[n](a, b, c)(i, j, k) == &v);
                 visited[&v - v1.data(n)][n]++;
                 found = true;
             }
         }
-        EXPECT_TRUE(found);
+        CHECK(found);
     });
 
     for (len_type i = 0;i < 31;i++)
-    {
-        for (len_type j = 0;j < 3;j++)
-        {
-            EXPECT_EQ(visited[i][j], 1);
-        }
-    }
+    for (len_type j = 0;j < 3;j++)
+        CHECK(visited[i][j]);
 
     visited = {};
     v2.for_each_element<3,2>(
     [&](const double& v, int a, int b, int c, int d, int e,
         len_type i, len_type j, len_type k, len_type l, len_type m)
     {
-        EXPECT_LT(a, 2u);
-        EXPECT_LT(b, 2u);
-        EXPECT_LT(c, 2u);
-        EXPECT_EQ(d, 1u);
-        EXPECT_EQ(e, 1u);
-        EXPECT_EQ(a^b^c^d^e, 0u);
-        EXPECT_GE(i, 0);
-        EXPECT_LT(i, len[0][a]);
-        EXPECT_GE(j, 0);
-        EXPECT_LT(j, len[1][b]);
-        EXPECT_GE(k, 0);
-        EXPECT_LT(k, len[2][c]);
+        CHECK(a < 2u);
+        CHECK(b < 2u);
+        CHECK(c < 2u);
+        CHECK(1u == d);
+        CHECK(1u == e);
+        CHECK((a^b^c^d^e) == 0u);
+        CHECK(i >= 0);
+        CHECK(i < len[0][a]);
+        CHECK(j >= 0);
+        CHECK(j < len[1][b]);
+        CHECK(k >= 0);
+        CHECK(k < len[2][c]);
         bool found = false;
         for (int n = 0;n < 3;n++)
         {
             if (l == indices[n][0] && m == indices[n][1])
             {
-                auto v3 = v2[n](a, b, c);
-                EXPECT_EQ(&v, &v3(i, j, k));
+                CHECK(&v2[n](a, b, c)(i, j, k) == &v);
                 visited[&v - v2.data(n)][n]++;
                 found = true;
             }
         }
-        EXPECT_TRUE(found);
+        CHECK(found);
     });
 
     for (len_type i = 0;i < 31;i++)
-    {
-        for (len_type j = 0;j < 3;j++)
-        {
-            EXPECT_EQ(visited[i][j], 1);
-        }
-    }
+    for (len_type j = 0;j < 3;j++)
+        CHECK(visited[i][j]);
 }
 
-TEST(indexed_dpd_varray, swap)
+TEST_CASE("indexed_dpd_varray::swap")
 {
     indexed_dpd_marray<double> v1(1, 2, {{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}},
                                   {1, 1}, {{0, 0}, {1, 3}, {0, 3}}, 1.0, layouts[0]);
@@ -567,79 +538,79 @@ TEST(indexed_dpd_varray, swap)
     auto data1 = v1.data();
     auto data2 = v2.data();
 
-    EXPECT_EQ(6u, v1.dimension());
-    EXPECT_EQ(4u, v1.dense_dimension());
-    EXPECT_EQ(2u, v1.indexed_dimension());
-    EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}}), v1.lengths());
-    EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v1.dense_lengths());
-    EXPECT_EQ((len_vector{2, 5}), v1.indexed_lengths());
-    EXPECT_EQ(3, v1.num_indices());
-    EXPECT_EQ((irrep_vector{1, 1}), v1.indexed_irreps());
-    EXPECT_EQ((matrix<len_type>{{0, 0}, {1, 3}, {0, 3}}), v1.indices());
-    EXPECT_EQ(1u, v1.irrep());
-    EXPECT_EQ(2u, v1.num_irreps());
+    CHECK(v1.dimension() == 6u);
+    CHECK(v1.dense_dimension() == 4u);
+    CHECK(v1.indexed_dimension() == 2u);
+    CHECK(v1.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}});
+    CHECK(v1.dense_lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}});
+    CHECK(v1.indexed_lengths() == len_vector{2, 5});
+    CHECK(v1.num_indices() == 3);
+    CHECK(v1.indexed_irreps() == irrep_vector{1, 1});
+    CHECK(v1.indices() == matrix<len_type>{{0, 0}, {1, 3}, {0, 3}});
+    CHECK(v1.irrep() == 1u);
+    CHECK(v1.num_irreps() == 2u);
 
-    EXPECT_EQ(5u, v2.dimension());
-    EXPECT_EQ(3u, v2.dense_dimension());
-    EXPECT_EQ(2u, v2.indexed_dimension());
-    EXPECT_EQ((matrix<len_type>{{2, 3}, {1, 2}, {3, 1}, {2, 2}, {4, 5}}), v2.lengths());
-    EXPECT_EQ((matrix<len_type>{{2, 3}, {1, 2}, {3, 1}}), v2.dense_lengths());
-    EXPECT_EQ((len_vector{2, 4}), v2.indexed_lengths());
-    EXPECT_EQ(3, v2.num_indices());
-    EXPECT_EQ((irrep_vector{1, 0}), v2.indexed_irreps());
-    EXPECT_EQ((matrix<len_type>{{0, 0}, {1, 0}, {1, 2}}), v2.indices());
-    EXPECT_EQ(0u, v2.irrep());
-    EXPECT_EQ(2u, v2.num_irreps());
+    CHECK(v2.dimension() == 5u);
+    CHECK(v2.dense_dimension() == 3u);
+    CHECK(v2.indexed_dimension() == 2u);
+    CHECK(v2.lengths() == matrix<len_type>{{2, 3}, {1, 2}, {3, 1}, {2, 2}, {4, 5}});
+    CHECK(v2.dense_lengths() == matrix<len_type>{{2, 3}, {1, 2}, {3, 1}});
+    CHECK(v2.indexed_lengths() == len_vector{2, 4});
+    CHECK(v2.num_indices() == 3);
+    CHECK(v2.indexed_irreps() == irrep_vector{1, 0});
+    CHECK(v2.indices() == matrix<len_type>{{0, 0}, {1, 0}, {1, 2}});
+    CHECK(v2.irrep() == 0u);
+    CHECK(v2.num_irreps() == 2u);
 
     v1.swap(v2);
 
-    EXPECT_EQ(6u, v2.dimension());
-    EXPECT_EQ(4u, v2.dense_dimension());
-    EXPECT_EQ(2u, v2.indexed_dimension());
-    EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}}), v2.lengths());
-    EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v2.dense_lengths());
-    EXPECT_EQ((len_vector{2, 5}), v2.indexed_lengths());
-    EXPECT_EQ(3, v2.num_indices());
-    EXPECT_EQ((irrep_vector{1, 1}), v2.indexed_irreps());
-    EXPECT_EQ((matrix<len_type>{{0, 0}, {1, 3}, {0, 3}}), v2.indices());
-    EXPECT_EQ(1u, v2.irrep());
-    EXPECT_EQ(2u, v2.num_irreps());
+    CHECK(v2.dimension() == 6u);
+    CHECK(v2.dense_dimension() == 4u);
+    CHECK(v2.indexed_dimension() == 2u);
+    CHECK(v2.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}});
+    CHECK(v2.dense_lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}});
+    CHECK(v2.indexed_lengths() == len_vector{2, 5});
+    CHECK(v2.num_indices() == 3);
+    CHECK(v2.indexed_irreps() == irrep_vector{1, 1});
+    CHECK(v2.indices() == matrix<len_type>{{0, 0}, {1, 3}, {0, 3}});
+    CHECK(v2.irrep() == 1u);
+    CHECK(v2.num_irreps() == 2u);
 
-    EXPECT_EQ(5u, v1.dimension());
-    EXPECT_EQ(3u, v1.dense_dimension());
-    EXPECT_EQ(2u, v1.indexed_dimension());
-    EXPECT_EQ((matrix<len_type>{{2, 3}, {1, 2}, {3, 1}, {2, 2}, {4, 5}}), v1.lengths());
-    EXPECT_EQ((matrix<len_type>{{2, 3}, {1, 2}, {3, 1}}), v1.dense_lengths());
-    EXPECT_EQ((len_vector{2, 4}), v1.indexed_lengths());
-    EXPECT_EQ(3, v1.num_indices());
-    EXPECT_EQ((irrep_vector{1, 0}), v1.indexed_irreps());
-    EXPECT_EQ((matrix<len_type>{{0, 0}, {1, 0}, {1, 2}}), v1.indices());
-    EXPECT_EQ(0u, v1.irrep());
-    EXPECT_EQ(2u, v1.num_irreps());
+    CHECK(v1.dimension() == 5u);
+    CHECK(v1.dense_dimension() == 3u);
+    CHECK(v1.indexed_dimension() == 2u);
+    CHECK(v1.lengths() == matrix<len_type>{{2, 3}, {1, 2}, {3, 1}, {2, 2}, {4, 5}});
+    CHECK(v1.dense_lengths() == matrix<len_type>{{2, 3}, {1, 2}, {3, 1}});
+    CHECK(v1.indexed_lengths() == len_vector{2, 4});
+    CHECK(v1.num_indices() == 3);
+    CHECK(v1.indexed_irreps() == irrep_vector{1, 0});
+    CHECK(v1.indices() == matrix<len_type>{{0, 0}, {1, 0}, {1, 2}});
+    CHECK(v1.irrep() == 0u);
+    CHECK(v1.num_irreps() == 2u);
 
     swap(v2, v1);
 
-    EXPECT_EQ(6u, v1.dimension());
-    EXPECT_EQ(4u, v1.dense_dimension());
-    EXPECT_EQ(2u, v1.indexed_dimension());
-    EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}}), v1.lengths());
-    EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v1.dense_lengths());
-    EXPECT_EQ((len_vector{2, 5}), v1.indexed_lengths());
-    EXPECT_EQ(3, v1.num_indices());
-    EXPECT_EQ((irrep_vector{1, 1}), v1.indexed_irreps());
-    EXPECT_EQ((matrix<len_type>{{0, 0}, {1, 3}, {0, 3}}), v1.indices());
-    EXPECT_EQ(1u, v1.irrep());
-    EXPECT_EQ(2u, v1.num_irreps());
+    CHECK(v1.dimension() == 6u);
+    CHECK(v1.dense_dimension() == 4u);
+    CHECK(v1.indexed_dimension() == 2u);
+    CHECK(v1.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}, {2, 2}, {4, 5}});
+    CHECK(v1.dense_lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}});
+    CHECK(v1.indexed_lengths() == len_vector{2, 5});
+    CHECK(v1.num_indices() == 3);
+    CHECK(v1.indexed_irreps() == irrep_vector{1, 1});
+    CHECK(v1.indices() == matrix<len_type>{{0, 0}, {1, 3}, {0, 3}});
+    CHECK(v1.irrep() == 1u);
+    CHECK(v1.num_irreps() == 2u);
 
-    EXPECT_EQ(5u, v2.dimension());
-    EXPECT_EQ(3u, v2.dense_dimension());
-    EXPECT_EQ(2u, v2.indexed_dimension());
-    EXPECT_EQ((matrix<len_type>{{2, 3}, {1, 2}, {3, 1}, {2, 2}, {4, 5}}), v2.lengths());
-    EXPECT_EQ((matrix<len_type>{{2, 3}, {1, 2}, {3, 1}}), v2.dense_lengths());
-    EXPECT_EQ((len_vector{2, 4}), v2.indexed_lengths());
-    EXPECT_EQ(3, v2.num_indices());
-    EXPECT_EQ((irrep_vector{1, 0}), v2.indexed_irreps());
-    EXPECT_EQ((matrix<len_type>{{0, 0}, {1, 0}, {1, 2}}), v2.indices());
-    EXPECT_EQ(0u, v2.irrep());
-    EXPECT_EQ(2u, v2.num_irreps());
+    CHECK(v2.dimension() == 5u);
+    CHECK(v2.dense_dimension() == 3u);
+    CHECK(v2.indexed_dimension() == 2u);
+    CHECK(v2.lengths() == matrix<len_type>{{2, 3}, {1, 2}, {3, 1}, {2, 2}, {4, 5}});
+    CHECK(v2.dense_lengths() == matrix<len_type>{{2, 3}, {1, 2}, {3, 1}});
+    CHECK(v2.indexed_lengths() == len_vector{2, 4});
+    CHECK(v2.num_indices() == 3);
+    CHECK(v2.indexed_irreps() == irrep_vector{1, 0});
+    CHECK(v2.indices() == matrix<len_type>{{0, 0}, {1, 0}, {1, 2}});
+    CHECK(v2.irrep() == 0u);
+    CHECK(v2.num_irreps() == 2u);
 }

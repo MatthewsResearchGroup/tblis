@@ -93,7 +93,7 @@ class irrep_iterator
     public:
         irrep_iterator(int irrep, int nirrep, int ndim)
         : irrep_(irrep), ndim_(ndim), irrep_bits_(__builtin_popcount(nirrep-1)),
-          irrep_mask_(nirrep-1), nblock_(1u << (irrep_bits_*(ndim-1)))
+          irrep_mask_(nirrep-1), nblock_(ndim == 0 ? (irrep == 0 ? 1 : 0) : 1u << (irrep_bits_*(ndim-1)))
         {
             MARRAY_ASSERT(ndim > 0);
             MARRAY_ASSERT(nirrep == 1 || nirrep == 2 ||

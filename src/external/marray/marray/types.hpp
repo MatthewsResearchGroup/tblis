@@ -106,20 +106,20 @@ typedef MARRAY_STRIDE_TYPE stride_type;
 #define MARRAY_OPT_NDIM 8
 #endif
 
-typedef short_vector<len_type,MARRAY_OPT_NDIM> len_vector;
-typedef short_vector<stride_type,MARRAY_OPT_NDIM> stride_vector;
-typedef short_vector<std::array<len_type,8>,MARRAY_OPT_NDIM> dpd_len_vector;
-typedef short_vector<std::array<stride_type,8>,MARRAY_OPT_NDIM> dpd_stride_vector;
-typedef short_vector<std::array<len_type,8>,2*MARRAY_OPT_NDIM> dpd_len_vector2;
-typedef short_vector<std::array<stride_type,8>,2*MARRAY_OPT_NDIM> dpd_stride_vector2;
-typedef short_vector<int,MARRAY_OPT_NDIM> dim_vector;
-typedef short_vector<int,2*MARRAY_OPT_NDIM> dim_vector2;
-typedef short_vector<len_type,2*MARRAY_OPT_NDIM> len_vector2;
-typedef short_vector<stride_type,2*MARRAY_OPT_NDIM> stride_vector2;
-typedef short_vector<len_type,MARRAY_OPT_NDIM> index_vector;
-typedef short_vector<int,MARRAY_OPT_NDIM> irrep_vector;
+using len_vector         = short_vector<len_type,MARRAY_OPT_NDIM>;
+using stride_vector      = short_vector<stride_type,MARRAY_OPT_NDIM>;
+using dpd_len_vector     = short_vector<std::array<len_type,8>,MARRAY_OPT_NDIM>;
+using dpd_stride_vector  = short_vector<std::array<stride_type,8>,MARRAY_OPT_NDIM>;
+using dpd_len_vector2    = short_vector<std::array<len_type,8>,2*MARRAY_OPT_NDIM>;
+using dpd_stride_vector2 = short_vector<std::array<stride_type,8>,2*MARRAY_OPT_NDIM>;
+using dim_vector         = short_vector<int,MARRAY_OPT_NDIM>;
+using dim_vector2        = short_vector<int,2*MARRAY_OPT_NDIM>;
+using len_vector2        = short_vector<len_type,2*MARRAY_OPT_NDIM>;
+using stride_vector2     = short_vector<stride_type,2*MARRAY_OPT_NDIM>;
+using index_vector       = short_vector<len_type,MARRAY_OPT_NDIM>;
+using irrep_vector       = short_vector<int,MARRAY_OPT_NDIM>;
 template <typename T>
-using ptr_vector = short_vector<T*,MARRAY_OPT_NDIM>;
+using ptr_vector         = short_vector<T*,MARRAY_OPT_NDIM>;
 
 #if MARRAY_DOXYGEN
 /**
@@ -178,6 +178,17 @@ struct uninitialized_t { constexpr uninitialized_t() {} };
  * @ingroup constants
  */
 constexpr uninitialized_t uninitialized;
+
+/**
+ * Special value which indicates that the number of dimensions is not known at compile time.
+ *
+ * @ingroup constants
+ */
+#if MARRAY_DOXYGEN
+constexpr int DYNAMIC;
+#else
+constexpr int DYNAMIC = -1;
+#endif
 
 }
 

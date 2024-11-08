@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include "catch_amalgamated.hpp"
 #include "marray.hpp"
 #include "expression.hpp"
 
@@ -7,62 +7,41 @@
 
 using namespace std;
 using namespace MArray;
+using Catch::Matchers::WithinULP;
 
 template <typename... T> struct types;
 
-typedef types<float,double,std::complex<float>,std::complex<double>> float_types;
-typedef types<int8_t,int16_t,int32_t,int64_t> int_types;
-typedef types<uint8_t,uint16_t,uint32_t,uint64_t> uint_types;
+using all_types = std::tuple<float,double,std::complex<float>,std::complex<double>,int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t>;
 
-template <typename T, typename U>
-struct concat_types;
-
-template <typename... T, typename... U>
-struct concat_types<types<T...>, types<U...>>
-{
-    typedef types<T..., U...> type;
-};
-
-template <typename T, typename U>
-struct product_types;
-
-template <typename... U>
-struct product_types<types<>, types<U...>>
-{
-    typedef types<> type;
-};
-
-template <typename T, typename... TT, typename... U>
-struct product_types<types<T, TT...>, types<U...>>
-{
-    typedef typename concat_types<types<std::pair<T,U>...>,
-        typename product_types<types<TT...>,
-                               types<U...>>::type>::type type;
-};
-
-typedef typename concat_types<float_types,
-    typename concat_types<int_types,uint_types>::type>::type all_types;
-
-template <typename T>
-struct to_testing_types;
 
 template <typename... T>
-struct to_testing_types<types<T...>>
-{
-    typedef testing::Types<T...> type;
-};
+struct concat;
+
+template <>
+struct concat<> { using type = std::tuple<>; };
+
+template <typename... T>
+struct concat<std::tuple<T...>> { using type = std::tuple<T...>; };
+
+template <typename... T, typename... U, typename... V>
+struct concat<std::tuple<T...>, std::tuple<U...>, V...> { using type = typename concat<std::tuple<T..., U...>, V...>::type; };
 
 template <typename T, typename U>
-using pair_types = typename to_testing_types<
-    typename product_types<T, U>::type>::type;
+struct pairs;
 
-typedef pair_types<all_types, all_types> pair_types_all;
-typedef pair_types<float_types, float_types> pair_types_ff;
-typedef pair_types<float_types, float_types> pair_types_fi;
-typedef pair_types<float_types, float_types> pair_types_fu;
-typedef pair_types<float_types, float_types> pair_types_ii;
-typedef pair_types<float_types, float_types> pair_types_iu;
-typedef pair_types<float_types, float_types> pair_types_uu;
+template <typename... T, typename U>
+struct pairs<std::tuple<T...>, U> { using type = std::tuple<std::pair<T,U>...>; };
+
+template <typename T, typename U>
+struct pair_types;
+
+template <typename... T, typename... U>
+struct pair_types<std::tuple<T...>, std::tuple<U...>>
+{
+    using type = typename concat<typename pairs<std::tuple<T...>, U>::type...>::type;
+};
+
+using all_pair_types = typename pair_types<all_types, all_types>::type;
 
 #define VECTOR_INITIALIZER { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15, \
                             16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31, \
@@ -73,21 +52,14 @@ typedef pair_types<float_types, float_types> pair_types_uu;
                              0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15, \
                             16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}
 
-template <class T> struct expression_vector : testing::Test {};
-
-TYPED_TEST_CASE(expression_vector, pair_types_all);
-
-//typedef pair_types<types<double>, types<std::complex<double>>> tmp_types;
-//TYPED_TEST_CASE(expression_vector, tmp_types);
-
 /*
  * These are handled outside of the expression framework now.
  *
 
-TYPED_TEST(expression_vector, vector_assign)
+TEMPLATE_LIST_TEST_CASE("expression_vector::vector_assign", "", all_pair_types)
 {
-    typedef typename TypeParam::first_type T;
-    typedef typename TypeParam::second_type U;
+    typedef typename TestType::first_type T;
+    typedef typename TestType::second_type U;
 
     T data1[128] = VECTOR_INITIALIZER;
     U data2[128] = {0};
@@ -99,16 +71,16 @@ TYPED_TEST(expression_vector, vector_assign)
 
     for (int i = 0;i < 128;i++)
     {
-        SCOPED_TRACE(i);
-        EXPECT_EQ(T(i%32), a[i]);
-        EXPECT_EQ(U(i%32), b[i]);
+        INFO("i = " << i);
+        CHECK(a[i] == T(i%32));
+        CHECK(b[i] == U(i%32));
     }
 }
 
-TYPED_TEST(expression_vector, vector_set)
+TEMPLATE_LIST_TEST_CASE("expression_vector::vector_set", "", all_pair_types)
 {
-    typedef typename TypeParam::first_type T;
-    typedef typename TypeParam::second_type U;
+    typedef typename TestType::first_type T;
+    typedef typename TestType::second_type U;
 
     U data2[128] = {0};
 
@@ -118,17 +90,17 @@ TYPED_TEST(expression_vector, vector_set)
 
     for (int i = 0;i < 128;i++)
     {
-        SCOPED_TRACE(i);
-        EXPECT_EQ(U(3), b[i]);
+        INFO("i = " << i);
+        CHECK(b[i] == U(3));
     }
 }
 
 */
 
-TYPED_TEST(expression_vector, vector_add)
+TEMPLATE_LIST_TEST_CASE("expression_vector::vector_add", "", all_pair_types)
 {
-    typedef typename TypeParam::first_type T;
-    typedef typename TypeParam::second_type U;
+    typedef typename TestType::first_type T;
+    typedef typename TestType::second_type U;
     typedef decltype(std::declval<operators::plus>()(std::declval<T>(),
                                                      std::declval<U>())) V;
 
@@ -142,9 +114,9 @@ TYPED_TEST(expression_vector, vector_add)
 
     for (int i = 0;i < 128;i++)
     {
-        SCOPED_TRACE(i);
-        EXPECT_EQ(T(i%32), a[i]);
-        EXPECT_EQ(U(2*(i%32)), b[i]);
+        INFO("i = " << i);
+        CHECK(a[i] == T(i%32));
+        CHECK(b[i] == U(2*(i%32)));
     }
 
     T data3[128] = VECTOR_INITIALIZER;
@@ -158,17 +130,17 @@ TYPED_TEST(expression_vector, vector_add)
 
     for (int i = 0;i < 128;i++)
     {
-        SCOPED_TRACE(i);
-        EXPECT_EQ(T(i%32), c[i]);
-        EXPECT_EQ(U(i%32), d[i]);
-        EXPECT_EQ(V(2*(i%32)), e[i]);
+        INFO("i = " << i);
+        CHECK(c[i] == T(i%32));
+        CHECK(d[i] == U(i%32));
+        CHECK(e[i] == V(2*(i%32)));
     }
 }
 
-TYPED_TEST(expression_vector, vector_sub)
+TEMPLATE_LIST_TEST_CASE("expression_vector::vector_sub", "", all_pair_types)
 {
-    typedef typename TypeParam::first_type T;
-    typedef typename TypeParam::second_type U;
+    typedef typename TestType::first_type T;
+    typedef typename TestType::second_type U;
     typedef decltype(std::declval<operators::minus>()(std::declval<T>(),
                                                       std::declval<U>())) V;
 
@@ -182,9 +154,9 @@ TYPED_TEST(expression_vector, vector_sub)
 
     for (int i = 0;i < 128;i++)
     {
-        SCOPED_TRACE(i);
-        EXPECT_EQ(T(i%32), a[i]);
-        EXPECT_EQ(U(0), b[i]);
+        INFO("i = " << i);
+        CHECK(a[i] == T(i%32));
+        CHECK(b[i] == U(0));
     }
 
     T data3[128] = VECTOR_INITIALIZER;
@@ -198,17 +170,17 @@ TYPED_TEST(expression_vector, vector_sub)
 
     for (int i = 0;i < 128;i++)
     {
-        SCOPED_TRACE(i);
-        EXPECT_EQ(T(i%32), c[i]);
-        EXPECT_EQ(U(i%32), d[i]);
-        EXPECT_EQ(V(0), e[i]);
+        INFO("i = " << i);
+        CHECK(c[i] == T(i%32));
+        CHECK(d[i] == U(i%32));
+        CHECK(e[i] == V(0));
     }
 }
 
-TYPED_TEST(expression_vector, vector_mul)
+TEMPLATE_LIST_TEST_CASE("expression_vector::vector_mul", "", all_pair_types)
 {
-    typedef typename TypeParam::first_type T;
-    typedef typename TypeParam::second_type U;
+    typedef typename TestType::first_type T;
+    typedef typename TestType::second_type U;
     typedef decltype(std::declval<operators::multiplies>()(std::declval<T>(),
                                                            std::declval<U>())) V;
 
@@ -239,9 +211,9 @@ TYPED_TEST(expression_vector, vector_mul)
 
     for (int i = 0;i < 128;i++)
     {
-        SCOPED_TRACE(i);
-        EXPECT_EQ(T(i%8), a[i]);
-        EXPECT_EQ(U((i%8)*(i%8)), b[i]);
+        INFO("i = " << i);
+        CHECK(a[i] == T(i%8));
+        CHECK(b[i] == U((i%8)*(i%8)));
     }
 
     T data3[128] = { 0, 1, 2, 3, 4, 5, 6, 7, \
@@ -285,17 +257,17 @@ TYPED_TEST(expression_vector, vector_mul)
 
     for (int i = 0;i < 128;i++)
     {
-        SCOPED_TRACE(i);
-        EXPECT_EQ(T(i%8), c[i]);
-        EXPECT_EQ(U(i%8), d[i]);
-        EXPECT_EQ(V((i%8)*(i%8)), e[i]);
+        INFO("i = " << i);
+        CHECK(c[i] == T(i%8));
+        CHECK(d[i] == U(i%8));
+        CHECK(e[i] == V((i%8)*(i%8)));
     }
 }
 
-TYPED_TEST(expression_vector, vector_div)
+TEMPLATE_LIST_TEST_CASE("expression_vector::vector_div", "", all_pair_types)
 {
-    typedef typename TypeParam::first_type T;
-    typedef typename TypeParam::second_type U;
+    typedef typename TestType::first_type T;
+    typedef typename TestType::second_type U;
     typedef decltype(std::declval<operators::divides>()(std::declval<T>(),
                                                         std::declval<U>())) V;
 
@@ -313,9 +285,9 @@ TYPED_TEST(expression_vector, vector_div)
 
     for (int i = 0;i < 128;i++)
     {
-        SCOPED_TRACE(i);
-        EXPECT_EQ(T(std::max(1,i%32)), a[i]);
-        EXPECT_EQ(U(1), b[i]);
+        INFO("i = " << i);
+        CHECK(a[i] == T(std::max(1,i%32)));
+        CHECK(b[i] == U(1));
     }
 
     T data3[128] = VECTOR_INITIALIZER;
@@ -337,14 +309,14 @@ TYPED_TEST(expression_vector, vector_div)
 
     for (int i = 0;i < 128;i++)
     {
-        SCOPED_TRACE(i);
-        EXPECT_EQ(T(std::max(1,i%32)), c[i]);
-        EXPECT_EQ(U(std::max(1,i%32)), d[i]);
-        EXPECT_EQ(V(1), e[i]);
+        INFO("i = " << i);
+        CHECK(c[i] == T(std::max(1,i%32)));
+        CHECK(d[i] == U(std::max(1,i%32)));
+        CHECK(e[i] == V(1));
     }
 }
 
-TEST(expression, assign)
+TEST_CASE("expression::assign")
 {
     using namespace slice;
 
@@ -363,67 +335,67 @@ TEST(expression, assign)
     marray<double,2> v7({3, 2}, 5.0);
 
     v1 = 2.0;
-    EXPECT_EQ((array<double,12>{2, 2, 2, 2, 2, 2,
-                                2, 2, 2, 2, 2, 2}), *(array<double,12>*)v1.data());
+    CHECK(*(array<double,12>*)v1.data() == array<double,12>{2, 2, 2, 2, 2, 2,
+                                                            2, 2, 2, 2, 2, 2});
 
     v1 = 3;
-    EXPECT_EQ((array<double,12>{3, 3, 3, 3, 3, 3,
-                                3, 3, 3, 3, 3, 3}), *(array<double,12>*)v1.data());
+    CHECK(*(array<double,12>*)v1.data() == array<double,12>{3, 3, 3, 3, 3, 3,
+                                                            3, 3, 3, 3, 3, 3});
 
     v1 = v2;
-    EXPECT_EQ((array<double,12>{ 1, 2, 3, 4, 5, 6,
-                                 7, 8, 9,10,11,12}), *(array<double,12>*)v1.data());
+    CHECK(*(array<double,12>*)v1.data() == array<double,12>{ 1, 2, 3, 4, 5, 6,
+                                                             7, 8, 9,10,11,12});
 
     v1 = v3[range(2)][all][1][all];
-    EXPECT_EQ((array<double,12>{ 1, 1, 1, 1, 1, 1,
-                                 1, 1, 1, 1, 1, 1}), *(array<double,12>*)v1.data());
+    CHECK(*(array<double,12>*)v1.data() == array<double,12>{ 1, 1, 1, 1, 1, 1,
+                                                             1, 1, 1, 1, 1, 1});
 
     v1 = v4;
-    EXPECT_EQ((array<double,12>{ 4, 4, 4, 4, 4, 4,
-                                 4, 4, 4, 4, 4, 4}), *(array<double,12>*)v1.data());
+    CHECK(*(array<double,12>*)v1.data() == array<double,12>{ 4, 4, 4, 4, 4, 4,
+                                                             4, 4, 4, 4, 4, 4});
 
     v2 = 2.0;
-    EXPECT_EQ((array<double,12>{2, 2, 2, 2, 2, 2,
-                                2, 2, 2, 2, 2, 2}), *(array<double,12>*)v2.data());
+    CHECK(*(array<double,12>*)v2.data() == array<double,12>{2, 2, 2, 2, 2, 2,
+                                                            2, 2, 2, 2, 2, 2});
 
     v2 = 3;
-    EXPECT_EQ((array<double,12>{3, 3, 3, 3, 3, 3,
-                                3, 3, 3, 3, 3, 3}), *(array<double,12>*)v2.data());
+    CHECK(*(array<double,12>*)v2.data() == array<double,12>{3, 3, 3, 3, 3, 3,
+                                                            3, 3, 3, 3, 3, 3});
 
     v2 = v5;
-    EXPECT_EQ((array<double,12>{12,11,10, 9, 8, 7,
-                                 6, 5, 4, 3, 2, 1}), *(array<double,12>*)v2.data());
+    CHECK(*(array<double,12>*)v2.data() == array<double,12>{12,11,10, 9, 8, 7,
+                                                             6, 5, 4, 3, 2, 1});
 
     v2 = v3[range(2)][all][1][all];
-    EXPECT_EQ((array<double,12>{ 1, 1, 1, 1, 1, 1,
-                                 1, 1, 1, 1, 1, 1}), *(array<double,12>*)v2.data());
+    CHECK(*(array<double,12>*)v2.data() == array<double,12>{ 1, 1, 1, 1, 1, 1,
+                                                             1, 1, 1, 1, 1, 1});
 
     v2 = v4;
-    EXPECT_EQ((array<double,12>{ 4, 4, 4, 4, 4, 4,
-                                 4, 4, 4, 4, 4, 4}), *(array<double,12>*)v2.data());
+    CHECK(*(array<double,12>*)v2.data() == array<double,12>{ 4, 4, 4, 4, 4, 4,
+                                                             4, 4, 4, 4, 4, 4});
 
     v1[1][all][all] = 2.0;
-    EXPECT_EQ((array<double,12>{4, 4, 4, 4, 4, 4,
-                                2, 2, 2, 2, 2, 2}), *(array<double,12>*)v1.data());
+    CHECK(*(array<double,12>*)v1.data() == array<double,12>{4, 4, 4, 4, 4, 4,
+                                                            2, 2, 2, 2, 2, 2});
 
     v1[1][all][all] = 3;
-    EXPECT_EQ((array<double,12>{4, 4, 4, 4, 4, 4,
-                                3, 3, 3, 3, 3, 3}), *(array<double,12>*)v1.data());
+    CHECK(*(array<double,12>*)v1.data() == array<double,12>{4, 4, 4, 4, 4, 4,
+                                                            3, 3, 3, 3, 3, 3});
 
     v1[1][all][all] = v6;
-    EXPECT_EQ((array<double,12>{ 4, 4, 4, 4, 4, 4,
-                                -1,-1,-1,-1,-1,-1}), *(array<double,12>*)v1.data());
+    CHECK(*(array<double,12>*)v1.data() == array<double,12>{ 4, 4, 4, 4, 4, 4,
+                                                            -1,-1,-1,-1,-1,-1});
 
     v1[1][all][all] = v3[1][all][1][all];
-    EXPECT_EQ((array<double,12>{ 4, 4, 4, 4, 4, 4,
-                                 1, 1, 1, 1, 1, 1}), *(array<double,12>*)v1.data());
+    CHECK(*(array<double,12>*)v1.data() == array<double,12>{ 4, 4, 4, 4, 4, 4,
+                                                             1, 1, 1, 1, 1, 1});
 
     v1[1][all][all] = v7;
-    EXPECT_EQ((array<double,12>{ 4, 4, 4, 4, 4, 4,
-                                 5, 5, 5, 5, 5, 5}), *(array<double,12>*)v1.data());
+    CHECK(*(array<double,12>*)v1.data() == array<double,12>{ 4, 4, 4, 4, 4, 4,
+                                                             5, 5, 5, 5, 5, 5});
 }
 
-TEST(expression, bcast)
+TEST_CASE("expression::bcast")
 {
     using namespace slice;
 
@@ -433,27 +405,27 @@ TEST(expression, bcast)
     marray_view<double,1> v2({3}, data);
 
     v1 = v2;
-    EXPECT_EQ((array<double,18>{1, 2, 3, 1, 2, 3,
-                                1, 2, 3, 1, 2, 3,
-                                1, 2, 3, 1, 2, 3}), *(array<double,18>*)v1.data());
+    CHECK(*(array<double,18>*)v1.data() == array<double,18>{1, 2, 3, 1, 2, 3,
+                                                            1, 2, 3, 1, 2, 3,
+                                                            1, 2, 3, 1, 2, 3});
 
     v1 = 0;
-    EXPECT_EQ((array<double,18>{0, 0, 0, 0, 0, 0,
-                                0, 0, 0, 0, 0, 0,
-                                0, 0, 0, 0, 0, 0}), *(array<double,18>*)v1.data());
+    CHECK(*(array<double,18>*)v1.data() == array<double,18>{0, 0, 0, 0, 0, 0,
+                                                            0, 0, 0, 0, 0, 0,
+                                                            0, 0, 0, 0, 0, 0});
 
     v1 = v2[bcast][bcast];
-    EXPECT_EQ((array<double,18>{1, 2, 3, 1, 2, 3,
-                                1, 2, 3, 1, 2, 3,
-                                1, 2, 3, 1, 2, 3}), *(array<double,18>*)v1.data());
+    CHECK(*(array<double,18>*)v1.data() == array<double,18>{1, 2, 3, 1, 2, 3,
+                                                            1, 2, 3, 1, 2, 3,
+                                                            1, 2, 3, 1, 2, 3});
 
     v1 = v2[all][bcast][bcast];
-    EXPECT_EQ((array<double,18>{1, 1, 1, 1, 1, 1,
-                                2, 2, 2, 2, 2, 2,
-                                3, 3, 3, 3, 3, 3}), *(array<double,18>*)v1.data());
+    CHECK(*(array<double,18>*)v1.data() == array<double,18>{1, 1, 1, 1, 1, 1,
+                                                            2, 2, 2, 2, 2, 2,
+                                                            3, 3, 3, 3, 3, 3});
 }
 
-TEST(expression, add)
+TEST_CASE("expression::add")
 {
     double data1[3] = {1, 2, 3};
     double data2[3] = {3, 2, 1};
@@ -463,22 +435,22 @@ TEST(expression, add)
     marray_view<double,1> v3({3}, data2);
 
     v1 = v2 + v3;
-    EXPECT_EQ((array<double,3>{4, 4, 4}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{4, 4, 4});
 
     v1 = v2 + 1;
-    EXPECT_EQ((array<double,3>{2, 3, 4}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{2, 3, 4});
 
     v1 = 2.0 + v3;
-    EXPECT_EQ((array<double,3>{5, 4, 3}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{5, 4, 3});
 
     v1 += v2;
-    EXPECT_EQ((array<double,3>{6, 6, 6}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{6, 6, 6});
 
     v1 += 1;
-    EXPECT_EQ((array<double,3>{7, 7, 7}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{7, 7, 7});
 }
 
-TEST(expression, sub)
+TEST_CASE("expression::sub")
 {
     double data1[3] = {1, 2, 3};
     double data2[3] = {3, 2, 1};
@@ -488,22 +460,22 @@ TEST(expression, sub)
     marray_view<double,1> v3({3}, data2);
 
     v1 = v2 - v3;
-    EXPECT_EQ((array<double,3>{-2, 0, 2}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{-2, 0, 2});
 
     v1 = v2 - 1;
-    EXPECT_EQ((array<double,3>{0, 1, 2}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{0, 1, 2});
 
     v1 = 2.0 - v3;
-    EXPECT_EQ((array<double,3>{-1, 0, 1}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{-1, 0, 1});
 
     v1 -= v2;
-    EXPECT_EQ((array<double,3>{-2, -2, -2}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{-2, -2, -2});
 
     v1 -= 1;
-    EXPECT_EQ((array<double,3>{-3, -3, -3}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{-3, -3, -3});
 }
 
-TEST(expression, mul)
+TEST_CASE("expression::mul")
 {
     double data1[3] = {1, 2, 3};
     double data2[3] = {3, 2, 1};
@@ -513,22 +485,22 @@ TEST(expression, mul)
     marray_view<double,1> v3({3}, data2);
 
     v1 = v2 * v3;
-    EXPECT_EQ((array<double,3>{3, 4, 3}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{3, 4, 3});
 
     v1 = v2 * 1;
-    EXPECT_EQ((array<double,3>{1, 2, 3}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{1, 2, 3});
 
     v1 = 2.0 * v3;
-    EXPECT_EQ((array<double,3>{6, 4, 2}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{6, 4, 2});
 
     v1 *= v2;
-    EXPECT_EQ((array<double,3>{6, 8, 6}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{6, 8, 6});
 
     v1 *= 2;
-    EXPECT_EQ((array<double,3>{12, 16, 12}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{12, 16, 12});
 }
 
-TEST(expression, div)
+TEST_CASE("expression::div")
 {
     double data1[3] = {1, 2, 3};
     double data2[3] = {3, 2, 1};
@@ -538,22 +510,22 @@ TEST(expression, div)
     marray_view<double,1> v3({3}, data2);
 
     v1 = v2 / v3;
-    EXPECT_EQ((array<double,3>{1.0/3, 1, 3}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{1.0/3, 1, 3});
 
     v1 = v2 / 1;
-    EXPECT_EQ((array<double,3>{1, 2, 3}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{1, 2, 3});
 
     v1 = 2.0 / v3;
-    EXPECT_EQ((array<double,3>{2.0/3, 1, 2}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{2.0/3, 1, 2});
 
     v1 /= v2;
-    EXPECT_EQ((array<double,3>{2.0/3, 0.5, 2.0/3}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{2.0/3, 0.5, 2.0/3});
 
     v1 /= 2;
-    EXPECT_EQ((array<double,3>{1.0/3, 0.25, 1.0/3}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{1.0/3, 0.25, 1.0/3});
 }
 
-TEST(expression, pow)
+TEST_CASE("expression::pow")
 {
     double data1[3] = {1, 2, 3};
     double data2[3] = {3, 2, 1};
@@ -563,16 +535,16 @@ TEST(expression, pow)
     marray_view<double,1> v3({3}, data2);
 
     v1 = pow(v2, v3);
-    EXPECT_EQ((array<double,3>{1, 4, 3}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{1, 4, 3});
 
     v1 = pow(v2, 2);
-    EXPECT_EQ((array<double,3>{1, 4, 9}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{1, 4, 9});
 
     v1 = pow(2.0, v3);
-    EXPECT_EQ((array<double,3>{8, 4, 2}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{8, 4, 2});
 }
 
-TEST(expression, negate)
+TEST_CASE("expression::negate")
 {
     double data1[3] = {1, 2, 3};
 
@@ -580,10 +552,10 @@ TEST(expression, negate)
     marray_view<double,1> v2({3}, data1);
 
     v1 = -v2;
-    EXPECT_EQ((array<double,3>{-1, -2, -3}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{-1, -2, -3});
 }
 
-TEST(expression, exp)
+TEST_CASE("expression::exp")
 {
     double data1[3] = {1, 2, 3};
 
@@ -591,10 +563,10 @@ TEST(expression, exp)
     marray_view<double,1> v2({3}, data1);
 
     v1 = exp(v2);
-    EXPECT_EQ((array<double,3>{exp(1), exp(2), exp(3)}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{exp(1), exp(2), exp(3)});
 }
 
-TEST(expression, sqrt)
+TEST_CASE("expression::sqrt")
 {
     double data1[3] = {4, 9, 16};
 
@@ -602,10 +574,10 @@ TEST(expression, sqrt)
     marray_view<double,1> v2({3}, data1);
 
     v1 = sqrt(v2);
-    EXPECT_EQ((array<double,3>{2, 3, 4}), *(array<double,3>*)v1.data());
+    CHECK(*(array<double,3>*)v1.data() == array<double,3>{2, 3, 4});
 }
 
-TEST(expression, compound)
+TEST_CASE("expression::compound")
 {
     double data1[3] = {1, 2, 3};
     double data2[3] = {3, 2, 1};
@@ -617,12 +589,12 @@ TEST(expression, compound)
     marray_view<double,1> v4({3}, data3);
 
     v1 = (pow(v2, 2) * v3 + 1)/4 + sqrt(v4);
-    EXPECT_DOUBLE_EQ(3, v1[0]);
-    EXPECT_DOUBLE_EQ(9.0/4 + sqrt(7), v1[1]);
-    EXPECT_DOUBLE_EQ(5.0/2 + sqrt(2), v1[2]);
+    CHECK_THAT(v1[0], WithinULP(3.0, 4));
+    CHECK_THAT(v1[1], WithinULP(9.0/4 + sqrt(7), 4));
+    CHECK_THAT(v1[2], WithinULP(5.0/2 + sqrt(2), 4));
 }
 
-TEST(expression, mixed_rank)
+TEST_CASE("expression::mixed_rank")
 {
     double data1[12] = {1, 2, 3, 4, 5, 6,
                         7, 8, 9,10,11,12};
@@ -635,16 +607,16 @@ TEST(expression, mixed_rank)
     marray_view<double,1> v4({3}, data3);
 
     v1 = v2 * 2 + v3 / v4;
-    EXPECT_DOUBLE_EQ( 2 + 1.0/3, v1.data()[ 0]);
-    EXPECT_DOUBLE_EQ( 4 + 2.0/2, v1.data()[ 1]);
-    EXPECT_DOUBLE_EQ( 6 + 3.0/1, v1.data()[ 2]);
-    EXPECT_DOUBLE_EQ( 8 + 4.0/3, v1.data()[ 3]);
-    EXPECT_DOUBLE_EQ(10 + 5.0/2, v1.data()[ 4]);
-    EXPECT_DOUBLE_EQ(12 + 6.0/1, v1.data()[ 5]);
-    EXPECT_DOUBLE_EQ(14 + 1.0/3, v1.data()[ 6]);
-    EXPECT_DOUBLE_EQ(16 + 2.0/2, v1.data()[ 7]);
-    EXPECT_DOUBLE_EQ(18 + 3.0/1, v1.data()[ 8]);
-    EXPECT_DOUBLE_EQ(20 + 4.0/3, v1.data()[ 9]);
-    EXPECT_DOUBLE_EQ(22 + 5.0/2, v1.data()[10]);
-    EXPECT_DOUBLE_EQ(24 + 6.0/1, v1.data()[11]);
+    CHECK_THAT(v1.data()[ 0], WithinULP( 2 + 1.0/3, 4));
+    CHECK_THAT(v1.data()[ 1], WithinULP( 4 + 2.0/2, 4));
+    CHECK_THAT(v1.data()[ 2], WithinULP( 6 + 3.0/1, 4));
+    CHECK_THAT(v1.data()[ 3], WithinULP( 8 + 4.0/3, 4));
+    CHECK_THAT(v1.data()[ 4], WithinULP(10 + 5.0/2, 4));
+    CHECK_THAT(v1.data()[ 5], WithinULP(12 + 6.0/1, 4));
+    CHECK_THAT(v1.data()[ 6], WithinULP(14 + 1.0/3, 4));
+    CHECK_THAT(v1.data()[ 7], WithinULP(16 + 2.0/2, 4));
+    CHECK_THAT(v1.data()[ 8], WithinULP(18 + 3.0/1, 4));
+    CHECK_THAT(v1.data()[ 9], WithinULP(20 + 4.0/3, 4));
+    CHECK_THAT(v1.data()[10], WithinULP(22 + 5.0/2, 4));
+    CHECK_THAT(v1.data()[11], WithinULP(24 + 6.0/1, 4));
 }

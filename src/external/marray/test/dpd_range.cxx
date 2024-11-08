@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include "catch_amalgamated.hpp"
 #include "dpd/dpd_range.hpp"
 
 using namespace std;
@@ -11,14 +11,14 @@ using namespace MArray;
     std::vector<len_type> delta d; delta.resize(8, 1); \
     for (auto i : range(8)) \
     { \
-        SCOPED_TRACE(i); \
-        EXPECT_EQ(r[i].front(), front[i]); \
-        EXPECT_EQ(r[i].size(), size[i]); \
-        EXPECT_EQ(r[i].step(), delta[i]); \
+        INFO("i = " << i); \
+        CHECK(front[i] == r[i].front()); \
+        CHECK(size[i] == r[i].size()); \
+        CHECK(delta[i] == r[i].step()); \
     } \
 }
 
-TEST(dpd_range, dpd_range)
+TEST_CASE("dpd_range::dpd_range")
 {
     auto r1 = dpd_range({3, 5, 6, 2});
     CHECK_DPD_RANGE(r1, ({0, 0, 0, 0}), ({3, 5, 6, 2}), ({1, 1, 1, 1}));

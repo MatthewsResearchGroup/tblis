@@ -143,12 +143,12 @@ class array_1d
 
             virtual adaptor_base& copy(adaptor_base& other) override
             {
-            	return *(new (static_cast<adaptor*>(&other)) adaptor(*this));
+                return *(new (static_cast<adaptor*>(&other)) adaptor(*this));
             }
 
             virtual adaptor_base& move(adaptor_base& other) override
             {
-            	return *(new (static_cast<adaptor*>(&other)) adaptor(std::move(*this)));
+                return *(new (static_cast<adaptor*>(&other)) adaptor(std::move(*this)));
             }
         };
 

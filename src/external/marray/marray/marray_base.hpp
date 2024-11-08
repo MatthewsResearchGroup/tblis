@@ -784,7 +784,7 @@ class marray_base
         tensor_or_view& operator=(expression other);
 #else
         template <typename Expression>
-        std::enable_if_t<is_expression_arg<Expression>::value,Derived&>
+        std::enable_if_t<NDim != DYNAMIC && is_expression_arg<Expression>::value,Derived&>
         operator=(const Expression& other)
         {
             assign_expr(*this, other);
@@ -793,7 +793,7 @@ class marray_base
 
         /* Inherit docs */
         template <typename Expression>
-        std::enable_if_t<is_expression_arg<Expression>::value,const Derived&>
+        std::enable_if_t<NDim != DYNAMIC && is_expression_arg<Expression>::value,const Derived&>
         operator=(const Expression& other) const
         {
             assign_expr(*this, other);

@@ -1,29 +1,29 @@
 #include "indexed/indexed_marray.hpp"
-#include "gtest/gtest.h"
+#include "catch_amalgamated.hpp"
 
 using namespace std;
 using namespace MArray;
 
 #define CHECK_INDEXED_VARRAY_RESET(v) \
-    EXPECT_EQ(0u, v.dimension()); \
-    EXPECT_EQ(0u, v.dense_dimension()); \
-    EXPECT_EQ(0u, v.indexed_dimension()); \
-    EXPECT_EQ(1u, v.num_indices()); \
-    EXPECT_EQ(0u, v.data().size());
+    CHECK(v.dimension() == 0u); \
+    CHECK(v.dense_dimension() == 0u); \
+    CHECK(v.indexed_dimension() == 0u); \
+    CHECK(v.num_indices() == 1u); \
+    CHECK(v.data().size() == 0u);
 
 #define CHECK_INDEXED_VARRAY(v,value,...) \
-    EXPECT_EQ(4u, v.dimension()); \
-    EXPECT_EQ(2u, v.dense_dimension()); \
-    EXPECT_EQ(2u, v.indexed_dimension()); \
-    EXPECT_EQ((len_vector{4, 2, 5, 4}), v.lengths()); \
-    EXPECT_EQ((len_vector{4, 2}), v.dense_lengths()); \
-    EXPECT_EQ((len_vector{5, 4}), v.indexed_lengths()); \
-    EXPECT_EQ((stride_vector __VA_ARGS__), v.dense_strides()); \
-    EXPECT_EQ(3u, v.num_indices()); \
-    EXPECT_EQ((matrix<len_type>{{0, 0}, {2, 1}, {4, 3}}), v.indices()); \
-    EXPECT_EQ(value, v.data(0)[0]);
+    CHECK(v.dimension() == 4u); \
+    CHECK(v.dense_dimension() == 2u); \
+    CHECK(v.indexed_dimension() == 2u); \
+    CHECK(v.lengths() == len_vector{4, 2, 5, 4}); \
+    CHECK(v.dense_lengths() == len_vector{4, 2}); \
+    CHECK(v.indexed_lengths() == len_vector{5, 4}); \
+    CHECK(v.dense_strides() == stride_vector __VA_ARGS__); \
+    CHECK(v.num_indices() == 3u); \
+    CHECK(v.indices() == matrix<len_type>{{0, 0}, {2, 1}, {4, 3}}); \
+    CHECK(v.data(0)[0] == value);
 
-TEST(indexed_varray, constructor)
+TEST_CASE("indexed_varray::constructor")
 {
     indexed_marray<double> v1;
     CHECK_INDEXED_VARRAY_RESET(v1)
@@ -65,7 +65,7 @@ TEST(indexed_varray, constructor)
     CHECK_INDEXED_VARRAY(v62, 0.0, {1, 4})
 }
 
-TEST(indexed_varray, reset)
+TEST_CASE("indexed_varray::reset")
 {
     indexed_marray<double> v2({4, 2, 5, 4}, {{0, 0}, {2, 1}, {4, 3}}, 1.0);
 
@@ -112,7 +112,7 @@ TEST(indexed_varray, reset)
     CHECK_INDEXED_VARRAY_RESET(v1)
 }
 
-TEST(indexed_varray, view)
+TEST_CASE("indexed_varray::view")
 {
     indexed_marray<double> v1({4, 2, 5, 4}, {{0, 0}, {2, 1}, {4, 3}}, 1.0);
 
@@ -122,26 +122,26 @@ TEST(indexed_varray, view)
     auto v3 = v1.view();
     CHECK_INDEXED_VARRAY(v3, 1.0, {2, 1});
 
-    auto v4 = const_cast<const indexed_marray<double>&>(v1).view();
+    auto v4 = std::as_const(v1).view();
     CHECK_INDEXED_VARRAY(v4, 1.0, {2, 1});
 }
 
-TEST(indexed_varray, access)
+TEST_CASE("indexed_varray::access")
 {
     indexed_marray<double> v1({4, 2, 5, 4}, {{0, 0}, {2, 1}, {4, 3}});
 
     auto v2 = v1[0];
-    EXPECT_EQ((len_vector{4, 2}), v2.lengths());
-    EXPECT_EQ((stride_vector{2, 1}), v2.strides());
-    EXPECT_EQ(v1.data(0), v2.data());
+    CHECK(v2.lengths() == len_vector{4, 2});
+    CHECK(v2.strides() == stride_vector{2, 1});
+    CHECK(v2.data() == v1.data(0));
 
-    auto v3 = const_cast<const indexed_marray<double>&>(v1)[2];
-    EXPECT_EQ((len_vector{4, 2}), v3.lengths());
-    EXPECT_EQ((stride_vector{2, 1}), v3.strides());
-    EXPECT_EQ(v1.data(2), v3.data());
+    auto v3 = std::as_const(v1)[2];
+    CHECK(v3.lengths() == len_vector{4, 2});
+    CHECK(v3.strides() == stride_vector{2, 1});
+    CHECK(v3.data() == v1.data(2));
 }
 
-TEST(indexed_varray, index_iteration)
+TEST_CASE("indexed_varray::index_iteration")
 {
     int indices[3][2] = {{0, 0}, {2, 1}, {4, 3}};
     array<int,3> visited;
@@ -153,7 +153,7 @@ TEST(indexed_varray, index_iteration)
     v1.for_each_index(
     [&](const marray_view<double>& v, const index_vector& idx)
     {
-        EXPECT_EQ(idx.size(), 2u);
+        CHECK(idx.size() == 2u);
         len_type i = idx[0];
         len_type j = idx[1];
         bool found = false;
@@ -161,26 +161,26 @@ TEST(indexed_varray, index_iteration)
         {
             if (i == indices[m][0] && j == indices[m][1])
             {
-                EXPECT_EQ(v1.data(m), v.data());
+                CHECK(v.data() == v1.data(m));
                 found = true;
                 visited[m]++;
             }
         }
-        EXPECT_TRUE(found);
-        EXPECT_EQ((len_vector{4, 2}), v.lengths());
-        EXPECT_EQ((stride_vector{2, 1}), v.strides());
+        CHECK(found);
+        CHECK(v.lengths() == len_vector{4, 2});
+        CHECK(v.strides() == stride_vector{2, 1});
     });
 
     for (len_type i = 0;i < 3;i++)
     {
-        EXPECT_EQ(visited[i], 1);
+        CHECK(1 == visited[i]);
     }
 
     visited = {};
     v2.for_each_index(
     [&](const marray_view<const double>& v, const index_vector& idx)
     {
-        EXPECT_EQ(idx.size(), 2u);
+        CHECK(idx.size() == 2u);
         len_type i = idx[0];
         len_type j = idx[1];
         bool found = false;
@@ -188,20 +188,18 @@ TEST(indexed_varray, index_iteration)
         {
             if (i == indices[m][0] && j == indices[m][1])
             {
-                EXPECT_EQ(v2.data(m), v.data());
+                CHECK(v.data() == v2.data(m));
                 found = true;
                 visited[m]++;
             }
         }
-        EXPECT_TRUE(found);
-        EXPECT_EQ((len_vector{4, 2}), v.lengths());
-        EXPECT_EQ((stride_vector{2, 1}), v.strides());
+        CHECK(found);
+        CHECK(v.lengths() == len_vector{4, 2});
+        CHECK(v.strides() == stride_vector{2, 1});
     });
 
     for (len_type i = 0;i < 3;i++)
-    {
-        EXPECT_EQ(visited[i], 1);
-    }
+        CHECK(visited[i]);
 
     visited = {};
     v1.for_each_index<2,2>(
@@ -212,20 +210,18 @@ TEST(indexed_varray, index_iteration)
         {
             if (i == indices[m][0] && j == indices[m][1])
             {
-                EXPECT_EQ(v1.data(m), v.data());
+                CHECK(v.data() == v1.data(m));
                 found = true;
                 visited[m]++;
             }
         }
-        EXPECT_TRUE(found);
-        EXPECT_EQ((array<len_type,2>{4, 2}), v.lengths());
-        EXPECT_EQ((array<stride_type,2>{2, 1}), v.strides());
+        CHECK(found);
+        CHECK(v.lengths() == array<len_type,2>{4, 2});
+        CHECK(v.strides() == array<stride_type,2>{2, 1});
     });
 
     for (len_type i = 0;i < 3;i++)
-    {
-        EXPECT_EQ(visited[i], 1);
-    }
+        CHECK(visited[i]);
 
     visited = {};
     v2.for_each_index<2,2>(
@@ -236,23 +232,21 @@ TEST(indexed_varray, index_iteration)
         {
             if (i == indices[m][0] && j == indices[m][1])
             {
-                EXPECT_EQ(v2.data(m), v.data());
+                CHECK(v.data() == v2.data(m));
                 found = true;
                 visited[m]++;
             }
         }
-        EXPECT_TRUE(found);
-        EXPECT_EQ((array<len_type,2>{4, 2}), v.lengths());
-        EXPECT_EQ((array<stride_type,2>{2, 1}), v.strides());
+        CHECK(found);
+        CHECK(v.lengths() == array<len_type,2>{4, 2});
+        CHECK(v.strides() == array<stride_type,2>{2, 1});
     });
 
     for (len_type i = 0;i < 3;i++)
-    {
-        EXPECT_EQ(visited[i], 1);
-    }
+        CHECK(visited[i]);
 }
 
-TEST(indexed_varray, element_iteration)
+TEST_CASE("indexed_varray::element_iteration")
 {
     int indices[3][2] = {{0, 0}, {2, 1}, {4, 3}};
     array<array<array<int,3>,2>,4> visited;
@@ -264,145 +258,118 @@ TEST(indexed_varray, element_iteration)
     v1.for_each_element(
     [&](double& v, const len_vector& idx)
     {
-        EXPECT_EQ(idx.size(), 4u);
+        CHECK(idx.size() == 4u);
         len_type i = idx[0];
         len_type j = idx[1];
         len_type k = idx[2];
         len_type l = idx[3];
-        EXPECT_GE(i, 0);
-        EXPECT_LT(i, 4);
-        EXPECT_GE(j, 0);
-        EXPECT_LT(j, 2);
+        CHECK(i >= 0);
+        CHECK(i < 4);
+        CHECK(j >= 0);
+        CHECK(j < 2);
         bool found = false;
         for (int m = 0;m < 3;m++)
         {
             if (k == indices[m][0] && l == indices[m][1])
             {
-                EXPECT_EQ(&v1[m](i, j), &v);
+                CHECK(&v == &v1[m](i, j));
                 found = true;
                 visited[i][j][m]++;
             }
         }
-        EXPECT_TRUE(found);
+        CHECK(found);
     });
 
     for (len_type i = 0;i < 4;i++)
-    {
-        for (len_type j = 0;j < 2;j++)
-        {
-            for (len_type k = 0;k < 3;k++)
-            {
-                EXPECT_EQ(visited[i][j][k], 1);
-            }
-        }
-    }
+    for (len_type j = 0;j < 2;j++)
+    for (len_type k = 0;k < 3;k++)
+        CHECK(visited[i][j][k]);
 
     visited = {};
     v2.for_each_element(
     [&](const double& v, const len_vector& idx)
     {
-        EXPECT_EQ(idx.size(), 4u);
+        CHECK(idx.size() == 4u);
         len_type i = idx[0];
         len_type j = idx[1];
         len_type k = idx[2];
         len_type l = idx[3];
-        EXPECT_GE(i, 0);
-        EXPECT_LT(i, 4);
-        EXPECT_GE(j, 0);
-        EXPECT_LT(j, 2);
+        CHECK(i >= 0);
+        CHECK(i < 4);
+        CHECK(j >= 0);
+        CHECK(j < 2);
         bool found = false;
         for (int m = 0;m < 3;m++)
         {
             if (k == indices[m][0] && l == indices[m][1])
             {
-                EXPECT_EQ(&v2[m](i, j), &v);
+                CHECK(&v == &v2[m](i, j));
                 found = true;
                 visited[i][j][m]++;
             }
         }
-        EXPECT_TRUE(found);
+        CHECK(found);
     });
 
     for (len_type i = 0;i < 4;i++)
-    {
-        for (len_type j = 0;j < 2;j++)
-        {
-            for (len_type k = 0;k < 3;k++)
-            {
-                EXPECT_EQ(visited[i][j][k], 1);
-            }
-        }
-    }
+    for (len_type j = 0;j < 2;j++)
+    for (len_type k = 0;k < 3;k++)
+        CHECK(visited[i][j][k]);
 
     visited = {};
     v1.for_each_element<2,2>(
     [&](double& v, len_type i, len_type j, len_type k, len_type l)
     {
-        EXPECT_GE(i, 0);
-        EXPECT_LT(i, 4);
-        EXPECT_GE(j, 0);
-        EXPECT_LT(j, 2);
+        CHECK(i >= 0);
+        CHECK(i < 4);
+        CHECK(j >= 0);
+        CHECK(j < 2);
         bool found = false;
         for (int m = 0;m < 3;m++)
         {
             if (k == indices[m][0] && l == indices[m][1])
             {
-                EXPECT_EQ(&v1[m](i, j), &v);
+                CHECK(&v == &v1[m](i, j));
                 found = true;
                 visited[i][j][m]++;
             }
         }
-        EXPECT_TRUE(found);
+        CHECK(found);
     });
 
     for (len_type i = 0;i < 4;i++)
-    {
-        SCOPED_TRACE(i);
-        for (len_type j = 0;j < 2;j++)
-        {
-            SCOPED_TRACE(j);
-            for (len_type k = 0;k < 3;k++)
-            {
-                SCOPED_TRACE(k);
-                EXPECT_EQ(visited[i][j][k], 1);
-            }
-        }
-    }
+    for (len_type j = 0;j < 2;j++)
+    for (len_type k = 0;k < 3;k++)
+        CHECK(visited[i][j][k]);
 
     visited = {};
     v2.for_each_element<2,2>(
     [&](const double& v, len_type i, len_type j, len_type k, len_type l)
     {
-        EXPECT_GE(i, 0);
-        EXPECT_LT(i, 4);
-        EXPECT_GE(j, 0);
-        EXPECT_LT(j, 2);
+        CHECK(i >= 0);
+        CHECK(i < 4);
+        CHECK(j >= 0);
+        CHECK(j < 2);
         bool found = false;
         for (int m = 0;m < 3;m++)
         {
             if (k == indices[m][0] && l == indices[m][1])
             {
-                EXPECT_EQ(&v2[m](i, j), &v);
+                CHECK(&v == &v2[m](i, j));
                 found = true;
                 visited[i][j][m]++;
             }
         }
-        EXPECT_TRUE(found);
+        CHECK(found);
     });
 
     for (len_type i = 0;i < 4;i++)
-    {
-        for (len_type j = 0;j < 2;j++)
-        {
-            for (len_type k = 0;k < 3;k++)
-            {
-                EXPECT_EQ(visited[i][j][k], 1);
-            }
-        }
-    }
+    for (len_type j = 0;j < 2;j++)
+    for (len_type k = 0;k < 3;k++)
+        CHECK(visited[i][j][k]);
 }
 
-TEST(indexed_varray, swap)
+TEST_CASE("indexed_varray::swap")
 {
     indexed_marray<double> v1({4, 2, 5, 4}, {{0, 0}, {2, 1}, {4, 3}});
     indexed_marray<double> v2({4, 5, 7}, {{0, 4}, {2, 2}, {4, 1}, {1, 1}});
@@ -412,43 +379,43 @@ TEST(indexed_varray, swap)
 
     v1.swap(v2);
 
-    EXPECT_EQ(4u, v2.dimension());
-    EXPECT_EQ(2u, v2.dense_dimension());
-    EXPECT_EQ(2u, v2.indexed_dimension());
-    EXPECT_EQ((len_vector{4, 2, 5, 4}), v2.lengths());
-    EXPECT_EQ((len_vector{4, 2}), v2.dense_lengths());
-    EXPECT_EQ((len_vector{5, 4}), v2.indexed_lengths());
-    EXPECT_EQ((stride_vector{2, 1}), v2.dense_strides());
-    EXPECT_EQ(3u, v2.num_indices());
-    EXPECT_EQ((matrix<len_type>{{0, 0}, {2, 1}, {4, 3}}), v2.indices());
-    EXPECT_EQ(3u, v1.dimension());
-    EXPECT_EQ(1u, v1.dense_dimension());
-    EXPECT_EQ(2u, v1.indexed_dimension());
-    EXPECT_EQ((len_vector{4, 5, 7}), v1.lengths());
-    EXPECT_EQ((len_vector{4}), v1.dense_lengths());
-    EXPECT_EQ((len_vector{5, 7}), v1.indexed_lengths());
-    EXPECT_EQ((stride_vector{1}), v1.dense_strides());
-    EXPECT_EQ(4u, v1.num_indices());
-    EXPECT_EQ((matrix<len_type>{{0, 4}, {2, 2}, {4, 1}, {1, 1}}), v1.indices());
+    CHECK(v2.dimension() == 4u);
+    CHECK(v2.dense_dimension() == 2u);
+    CHECK(v2.indexed_dimension() == 2u);
+    CHECK(v2.lengths() == len_vector{4, 2, 5, 4});
+    CHECK(v2.dense_lengths() == len_vector{4, 2});
+    CHECK(v2.indexed_lengths() == len_vector{5, 4});
+    CHECK(v2.dense_strides() == stride_vector{2, 1});
+    CHECK(v2.num_indices() == 3u);
+    CHECK(v2.indices() == matrix<len_type>{{0, 0}, {2, 1}, {4, 3}});
+    CHECK(v1.dimension() == 3u);
+    CHECK(v1.dense_dimension() == 1u);
+    CHECK(v1.indexed_dimension() == 2u);
+    CHECK(v1.lengths() == len_vector{4, 5, 7});
+    CHECK(v1.dense_lengths() == len_vector{4});
+    CHECK(v1.indexed_lengths() == len_vector{5, 7});
+    CHECK(v1.dense_strides() == stride_vector{1});
+    CHECK(v1.num_indices() == 4u);
+    CHECK(v1.indices() == matrix<len_type>{{0, 4}, {2, 2}, {4, 1}, {1, 1}});
 
     swap(v2, v1);
 
-    EXPECT_EQ(4u, v1.dimension());
-    EXPECT_EQ(2u, v1.dense_dimension());
-    EXPECT_EQ(2u, v1.indexed_dimension());
-    EXPECT_EQ((len_vector{4, 2, 5, 4}), v1.lengths());
-    EXPECT_EQ((len_vector{4, 2}), v1.dense_lengths());
-    EXPECT_EQ((len_vector{5, 4}), v1.indexed_lengths());
-    EXPECT_EQ((stride_vector{2, 1}), v1.dense_strides());
-    EXPECT_EQ(3u, v1.num_indices());
-    EXPECT_EQ((matrix<len_type>{{0, 0}, {2, 1}, {4, 3}}), v1.indices());
-    EXPECT_EQ(3u, v2.dimension());
-    EXPECT_EQ(1u, v2.dense_dimension());
-    EXPECT_EQ(2u, v2.indexed_dimension());
-    EXPECT_EQ((len_vector{4, 5, 7}), v2.lengths());
-    EXPECT_EQ((len_vector{4}), v2.dense_lengths());
-    EXPECT_EQ((len_vector{5, 7}), v2.indexed_lengths());
-    EXPECT_EQ((stride_vector{1}), v2.dense_strides());
-    EXPECT_EQ(4u, v2.num_indices());
-    EXPECT_EQ((matrix<len_type>{{0, 4}, {2, 2}, {4, 1}, {1, 1}}), v2.indices());
+    CHECK(v1.dimension() == 4u);
+    CHECK(v1.dense_dimension() == 2u);
+    CHECK(v1.indexed_dimension() == 2u);
+    CHECK(v1.lengths() == len_vector{4, 2, 5, 4});
+    CHECK(v1.dense_lengths() == len_vector{4, 2});
+    CHECK(v1.indexed_lengths() == len_vector{5, 4});
+    CHECK(v1.dense_strides() == stride_vector{2, 1});
+    CHECK(v1.num_indices() == 3u);
+    CHECK(v1.indices() == matrix<len_type>{{0, 0}, {2, 1}, {4, 3}});
+    CHECK(v2.dimension() == 3u);
+    CHECK(v2.dense_dimension() == 1u);
+    CHECK(v2.indexed_dimension() == 2u);
+    CHECK(v2.lengths() == len_vector{4, 5, 7});
+    CHECK(v2.dense_lengths() == len_vector{4});
+    CHECK(v2.indexed_lengths() == len_vector{5, 7});
+    CHECK(v2.dense_strides() == stride_vector{1});
+    CHECK(v2.num_indices() == 4u);
+    CHECK(v2.indices() == matrix<len_type>{{0, 4}, {2, 2}, {4, 1}, {1, 1}});
 }

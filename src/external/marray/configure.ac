@@ -6,11 +6,15 @@ AM_MAINTAINER_MODE([disable])
 
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_PROG_CXX([g++ clang++ icpc])
+AC_PROG_CXX([clang++])
 AX_CXX_COMPILE_STDCXX([17], [noext])
 AC_LANG([C++])
-
 LT_INIT
+
+CXXFLAGS="$CXXFLAGS -DMARRAY_ENABLE_ASSERTS"
+
+AC_ARG_ENABLE([code-coverage], AS_HELP_STRING([--enable-code-coverage], [Enable code coverage testing with llvm-cov]))
+AM_CONDITIONAL([coverage], [test "x$enable_code_coverage" = "xyes"])
 
 mkdir -p bin
 

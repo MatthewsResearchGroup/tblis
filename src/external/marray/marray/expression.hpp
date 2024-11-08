@@ -615,7 +615,7 @@ template <typename Array, typename>
 struct is_marray
 {
     template <typename T, int NDim, typename Derived, bool Owner>
-    static std::true_type check(const marray_base<T, NDim, Derived, Owner>*);
+    static std::bool_constant<NDim != DYNAMIC> check(const marray_base<T, NDim, Derived, Owner>*);
 
     template <typename T, int NDim, int NIndexed, typename... Dims>
     static std::true_type check(const marray_slice<T, NDim, NIndexed, Dims...>*);

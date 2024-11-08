@@ -9,17 +9,6 @@
 namespace MArray
 {
 /**
- * Special value which indicates that the number of dimensions is not known at compile time.
- *
- * @ingroup constants
- */
-#if MARRAY_DOXYGEN
-constexpr int DYNAMIC;
-#else
-constexpr int DYNAMIC = -1;
-#endif
-
-/**
  * A partially-indexed tensor.
  *
  * This type cannot be constructed directly, but is returned by indexing a tensor

@@ -1,6 +1,8 @@
 #ifndef MARRAY_VECTOR_SSE41_HPP
 #define MARRAY_VECTOR_SSE41_HPP
 
+#if defined(__SSE4_1__)
+
 #include <emmintrin.h>
 #include <x86intrin.h>
 
@@ -1414,5 +1416,7 @@ struct vector_traits<U, std::enable_if_t<std::is_same<U,int64_t>::value ||
 };
 
 }
+
+#endif
 
 #endif //MARRAY_VECTOR_SSE41_HPP

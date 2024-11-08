@@ -1,6 +1,8 @@
 #ifndef MARRAY_VECTOR_NEON_HPP
 #define MARRAY_VECTOR_NEON_HPP
 
+#if defined(__ARM_NEON)
+
 #include <arm_neon.h>
 
 #include "vector.hpp"
@@ -1845,5 +1847,7 @@ struct vector_traits<U, std::enable_if_t<std::is_same_v<U,int64_t> ||
 };
 
 }
+
+#endif
 
 #endif //MARRAY_VECTOR_NEON_HPP

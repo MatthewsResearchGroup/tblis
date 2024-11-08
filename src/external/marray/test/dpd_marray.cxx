@@ -1,5 +1,5 @@
 #include "dpd/dpd_marray.hpp"
-#include "gtest/gtest.h"
+#include "catch_amalgamated.hpp"
 
 using namespace std;
 using namespace MArray;
@@ -53,46 +53,46 @@ static stride_type offsets[6][8] =
 };
 
 #define CHECK_DPD_MARRAY_RESET(v) \
-    EXPECT_EQ(nullptr, v.data()); \
-    EXPECT_EQ(0u, v.irrep()); \
-    EXPECT_EQ(0u, v.num_irreps()); \
-    EXPECT_EQ((dim_vector{}), v.permutation()); \
-    EXPECT_EQ((matrix<len_type>{}), v.lengths());
+    CHECK(v.data() == nullptr); \
+    CHECK(v.irrep() == 0u); \
+    CHECK(v.num_irreps() == 0u); \
+    CHECK(v.permutation() == dim_vector{}); \
+    CHECK(v.lengths() == matrix<len_type>{});
 
 #define CHECK_DPD_MARRAY(v,j) \
-    SCOPED_TRACE(j); \
-    EXPECT_EQ(1u, v.irrep()); \
-    EXPECT_EQ(2u, v.num_irreps()); \
-    EXPECT_EQ(perms[j], v.permutation()); \
-    EXPECT_EQ((matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}), v.lengths()); \
+    INFO("j = " << j); \
+    CHECK(v.irrep() == 1u); \
+    CHECK(v.num_irreps() == 2u); \
+    CHECK(v.permutation() == perms[j]); \
+    CHECK(v.lengths() == matrix<len_type>{{3, 1}, {2, 2}, {1, 2}, {3, 4}}); \
     \
     { \
         auto vs = v(1,0,0,0); \
-        EXPECT_EQ(v.data() + offsets[j][0], vs.data()); \
+        CHECK(vs.data() == v.data() + offsets[j][0]); \
         for (int k = 0;k < 4;k++) \
         { \
-            EXPECT_EQ(lengths[0][k], vs.length(k)); \
-            EXPECT_EQ(strides[j][0][k], vs.stride(k)); \
+            CHECK(vs.length(k) == lengths[0][k]); \
+            CHECK(vs.stride(k) == strides[j][0][k]); \
         } \
     } \
     \
     { \
         auto vs = v({0,1,0,0}); \
-        EXPECT_EQ(v.data() + offsets[j][1], vs.data()); \
-        EXPECT_EQ(lengths[1], vs.lengths()); \
-        EXPECT_EQ(strides[j][1], vs.strides()); \
+        CHECK(vs.data() == v.data() + offsets[j][1]); \
+        CHECK(vs.lengths() == lengths[1]); \
+        CHECK(vs.strides() == strides[j][1]); \
     } \
     \
     for (int i = 2;i < 8;i++) \
     { \
-        SCOPED_TRACE(i); \
+        INFO("i = " << i); \
         auto vs = v(irreps[i]); \
-        EXPECT_EQ(v.data() + offsets[j][i], vs.data()); \
-        EXPECT_EQ(lengths[i], vs.lengths()); \
-        EXPECT_EQ(strides[j][i], vs.strides()); \
+        CHECK(vs.data() == v.data() + offsets[j][i]); \
+        CHECK(vs.lengths() == lengths[i]); \
+        CHECK(vs.strides() == strides[j][i]); \
     }
 
-TEST(dpd_varray, constructor)
+TEST_CASE("dpd_varray::constructor")
 {
     double data[168];
     for (len_type i = 0;i < 168;i++) data[i] = i;
@@ -117,18 +117,18 @@ TEST(dpd_varray, constructor)
 
     dpd_marray<double> v51(v0);
     CHECK_DPD_MARRAY(v51, 0)
-    for (len_type i = 0;i < 168;i++) EXPECT_EQ(v51.data()[i], 0.0);
+    for (len_type i = 0;i < 168;i++) CHECK(0.0 == v51.data()[i]);
 
     dpd_marray<double> v52(v00);
     CHECK_DPD_MARRAY(v51, 0)
-    for (len_type i = 0;i < 168;i++) EXPECT_EQ(v52.data()[i], i);
+    for (len_type i = 0;i < 168;i++) CHECK(i == v52.data()[i]);
 
     dpd_marray<double> v6(dpd_marray_view<double>(1, 2, {{3, 1}, {2, 2}, {1, 2}, {3, 4}}, data, layouts[0]));
     CHECK_DPD_MARRAY(v6, 0)
-    for (len_type i = 0;i < 168;i++) EXPECT_EQ(v52.data()[i], i);
+    for (len_type i = 0;i < 168;i++) CHECK(i == v52.data()[i]);
 }
 
-TEST(dpd_varray, reset)
+TEST_CASE("dpd_varray::reset")
 {
     double data[168];
     for (len_type i = 0;i < 168;i++) data[i] = i;
@@ -148,29 +148,29 @@ TEST(dpd_varray, reset)
 
     v1.reset(v3);
     CHECK_DPD_MARRAY(v1, 0)
-    for (len_type i = 0;i < 168;i++) EXPECT_EQ(v1.data()[i], i);
+    for (len_type i = 0;i < 168;i++) CHECK(i == v1.data()[i]);
 
     v1.reset(v4);
     CHECK_DPD_MARRAY(v1, 0)
-    for (len_type i = 0;i < 168;i++) EXPECT_EQ(v1.data()[i], i);
+    for (len_type i = 0;i < 168;i++) CHECK(i == v1.data()[i]);
 
     v1.reset(v0);
     CHECK_DPD_MARRAY(v1, 0)
-    for (len_type i = 0;i < 168;i++) EXPECT_EQ(v1.data()[i], 0.0);
+    for (len_type i = 0;i < 168;i++) CHECK(0.0 == v1.data()[i]);
 
     v1.reset(dpd_marray_view<double>(1, 2, {{3, 1}, {2, 2}, {1, 2}, {3, 4}}, data, layouts[0]));
     CHECK_DPD_MARRAY(v1, 0)
-    for (len_type i = 0;i < 168;i++) EXPECT_EQ(v1.data()[i], i);
+    for (len_type i = 0;i < 168;i++) CHECK(i == v1.data()[i]);
 
     v1.reset(dpd_marray_view<const double>(1, 2, {{3, 1}, {2, 2}, {1, 2}, {3, 4}}, data, layouts[0]));
     CHECK_DPD_MARRAY(v1, 0)
-    for (len_type i = 0;i < 168;i++) EXPECT_EQ(v1.data()[i], i);
+    for (len_type i = 0;i < 168;i++) CHECK(i == v1.data()[i]);
 
     v1.reset();
     CHECK_DPD_MARRAY_RESET(v1)
 }
 
-TEST(dpd_varray, permute)
+TEST_CASE("dpd_varray::permute")
 {
     int perm_irreps[8] = {1, 0, 2, 3, 4, 5, 7, 6};
 
@@ -179,20 +179,20 @@ TEST(dpd_varray, permute)
 
     for (int j = 0;j < 6;j++)
     {
-        SCOPED_TRACE(j);
+        INFO("j = " << j);
 
         dpd_marray<double> v1(1, 2, {{3, 1}, {2, 2}, {1, 2}, {3, 4}}, layouts[j]);
 
         auto v2 = v1.permuted({1, 0, 2, 3});
-        EXPECT_EQ(v1.data(), v2.data());
-        EXPECT_EQ(1u, v2.irrep());
-        EXPECT_EQ(2u, v2.num_irreps());
-        EXPECT_EQ(perms2[j], v2.permutation());
-        EXPECT_EQ((matrix<len_type>{{2, 2}, {3, 1}, {1, 2}, {3, 4}}), v2.lengths());
+        CHECK(v2.data() == v1.data());
+        CHECK(v2.irrep() == 1u);
+        CHECK(v2.num_irreps() == 2u);
+        CHECK(v2.permutation() == perms2[j]);
+        CHECK(v2.lengths() == matrix<len_type>{{2, 2}, {3, 1}, {1, 2}, {3, 4}});
 
         for (int i = 0;i < 8;i++)
         {
-            SCOPED_TRACE(i);
+            INFO("i = " << i);
             len_vector len(4);
             stride_vector stride(4);
             for (int k = 0;k < 4;k++)
@@ -201,20 +201,20 @@ TEST(dpd_varray, permute)
                 stride[k] = strides[j][i][perms2[1][k]];
             }
             auto vs = v2(irreps[perm_irreps[i]]);
-            EXPECT_EQ(v1.data() + offsets[j][i], vs.data());
-            EXPECT_EQ(len, vs.lengths());
-            EXPECT_EQ(stride, vs.strides());
+            CHECK(vs.data() == v1.data() + offsets[j][i]);
+            CHECK(vs.lengths() == len);
+            CHECK(vs.strides() == stride);
         }
     }
 }
 
-TEST(dpd_varray, block_iteration)
+TEST_CASE("dpd_varray::block_iteration")
 {
     array<array<int,2>,2> visited;
 
     for (int l = 0;l < 6;l++)
     {
-        SCOPED_TRACE(l);
+        INFO("l = " << l);
 
         dpd_marray<double> v1(0, 2, {{2, 3}, {1, 2}, {3, 1}}, layouts[l]);
 
@@ -222,62 +222,54 @@ TEST(dpd_varray, block_iteration)
         v1.for_each_block(
         [&](marray_view<double>&& v3, const irrep_vector& irreps)
         {
-            EXPECT_EQ(irreps.size(), 3u);
+            CHECK(3u == irreps.size());
             int i = irreps[0];
             int j = irreps[1];
             int k = irreps[2];
-            EXPECT_LT(i, 2u);
-            EXPECT_LT(j, 2u);
-            EXPECT_LT(k, 2u);
-            EXPECT_EQ(i^j^k, 0u);
+            CHECK(i < 2u);
+            CHECK(j < 2u);
+            CHECK(k < 2u);
+            CHECK((i^j^k) == 0u);
             auto v4 = v1({i, j, k});
-            EXPECT_EQ(v3.data(), v4.data());
-            EXPECT_EQ(v3.lengths(), v4.lengths());
-            EXPECT_EQ(v3.strides(), v4.strides());
+            CHECK(v4.data() == v3.data());
+            CHECK(v4.lengths() == v3.lengths());
+            CHECK(v4.strides() == v3.strides());
             visited[i][j]++;
         });
 
         for (len_type i = 0;i < 2;i++)
-        {
-            for (len_type j = 0;j < 2;j++)
-            {
-                EXPECT_EQ(visited[i][j], 1);
-            }
-        }
+        for (len_type j = 0;j < 2;j++)
+            CHECK(visited[i][j]);
 
         visited = {};
         v1.for_each_block<3>(
         [&](marray_view<double,3>&& v3, int i, int j, int k)
         {
-            EXPECT_LT(i, 2u);
-            EXPECT_LT(j, 2u);
-            EXPECT_LT(k, 2u);
-            EXPECT_EQ(i^j^k, 0u);
+            CHECK(i < 2u);
+            CHECK(j < 2u);
+            CHECK(k < 2u);
+            CHECK((i^j^k) == 0u);
             auto v4 = v1(i, j, k);
-            EXPECT_EQ(v3.data(), v4.data());
-            EXPECT_EQ(v3.lengths(), v4.lengths());
-            EXPECT_EQ(v3.strides(), v4.strides());
+            CHECK(v4.data() == v3.data());
+            CHECK(v4.lengths() == v3.lengths());
+            CHECK(v4.strides() == v3.strides());
             visited[i][j]++;
         });
 
         for (len_type i = 0;i < 2;i++)
-        {
-            for (len_type j = 0;j < 2;j++)
-            {
-                EXPECT_EQ(visited[i][j], 1);
-            }
-        }
+        for (len_type j = 0;j < 2;j++)
+            CHECK(visited[i][j]);
     }
 }
 
-TEST(dpd_varray, element_iteration)
+TEST_CASE("dpd_varray::element_iteration")
 {
     array<int,31> visited;
     array<len_vector,3> len = {{{2, 3}, {1, 2}, {3, 1}}};
 
     for (int l = 0;l < 6;l++)
     {
-        SCOPED_TRACE(l);
+        INFO("l = " << l);
 
         dpd_marray<double> v1(0, 2, len, layouts[l]);
 
@@ -285,61 +277,57 @@ TEST(dpd_varray, element_iteration)
         v1.for_each_element(
         [&](double& v, const irrep_vector& irreps, const len_vector& pos)
         {
-            EXPECT_EQ(irreps.size(), 3u);
-            EXPECT_EQ(pos.size(), 3u);
+            CHECK(3u == irreps.size());
+            CHECK(3u == pos.size());
             int i = irreps[0];
             int j = irreps[1];
             int k = irreps[2];
             len_type a = pos[0];
             len_type b = pos[1];
             len_type c = pos[2];
-            EXPECT_LT(i, 2u);
-            EXPECT_LT(j, 2u);
-            EXPECT_LT(k, 2u);
-            EXPECT_GE(a, 0);
-            EXPECT_LT(a, len[0][i]);
-            EXPECT_GE(b, 0);
-            EXPECT_LT(b, len[1][j]);
-            EXPECT_GE(c, 0);
-            EXPECT_LT(c, len[2][k]);
-            EXPECT_EQ(i^j^k, 0u);
+            CHECK(i < 2u);
+            CHECK(j < 2u);
+            CHECK(k < 2u);
+            CHECK(a >= 0);
+            CHECK(a < len[0][i]);
+            CHECK(b >= 0);
+            CHECK(b < len[1][j]);
+            CHECK(c >= 0);
+            CHECK(c < len[2][k]);
+            CHECK((i^j^k) == 0u);
             auto v3 = v1(i, j, k);
-            EXPECT_EQ(&v, &v3(a, b, c));
+            CHECK(&v3(a, b, c) == &v);
             visited[&v - v1.data()]++;
         });
 
         for (int i = 0;i < 31;i++)
-        {
-            EXPECT_EQ(visited[i], 1);
-        }
+            CHECK(visited[i]);
 
         visited = {};
         v1.for_each_element<3>(
         [&](double& v, int i, int j, int k, len_type a, len_type b, len_type c)
         {
-            EXPECT_LT(i, 2u);
-            EXPECT_LT(j, 2u);
-            EXPECT_LT(k, 2u);
-            EXPECT_GE(a, 0);
-            EXPECT_LT(a, len[0][i]);
-            EXPECT_GE(b, 0);
-            EXPECT_LT(b, len[1][j]);
-            EXPECT_GE(c, 0);
-            EXPECT_LT(c, len[2][k]);
-            EXPECT_EQ(i^j^k, 0u);
+            CHECK(i < 2u);
+            CHECK(j < 2u);
+            CHECK(k < 2u);
+            CHECK(a >= 0);
+            CHECK(a < len[0][i]);
+            CHECK(b >= 0);
+            CHECK(b < len[1][j]);
+            CHECK(c >= 0);
+            CHECK(c < len[2][k]);
+            CHECK((i^j^k) == 0u);
             auto v3 = v1(i, j, k);
-            EXPECT_EQ(&v, &v3(a, b, c));
+            CHECK(&v3(a, b, c) == &v);
             visited[&v - v1.data()]++;
         });
 
         for (int i = 0;i < 31;i++)
-        {
-            EXPECT_EQ(visited[i], 1);
-        }
+            CHECK(visited[i]);
     }
 }
 
-TEST(dpd_varray, swap)
+TEST_CASE("dpd_varray::swap")
 {
     dpd_marray<double> v1(1, 2, {{2, 3}, {2, 1}, {5, 3}}, PREFIX_ROW_MAJOR);
     dpd_marray<double> v2(0, 2, {{1, 1}, {6, 3}, {2, 4}}, PREFIX_COLUMN_MAJOR);
@@ -349,79 +337,79 @@ TEST(dpd_varray, swap)
 
     v1.swap(v2);
 
-    EXPECT_EQ(data2, v1.data());
-    EXPECT_EQ(0u, v1.irrep());
-    EXPECT_EQ(2u, v1.num_irreps());
-    EXPECT_EQ((dim_vector{0, 1, 2}), v1.permutation());
-    EXPECT_EQ((matrix<len_type>{{1, 1}, {6, 3}, {2, 4}}), v1.lengths());
+    CHECK(v1.data() == data2);
+    CHECK(v1.irrep() == 0u);
+    CHECK(v1.num_irreps() == 2u);
+    CHECK(v1.permutation() == dim_vector{0, 1, 2});
+    CHECK(v1.lengths() == matrix<len_type>{{1, 1}, {6, 3}, {2, 4}});
 
-    EXPECT_EQ(data1, v2.data());
-    EXPECT_EQ(1u, v2.irrep());
-    EXPECT_EQ(2u, v2.num_irreps());
-    EXPECT_EQ((dim_vector{2, 1, 0}), v2.permutation());
-    EXPECT_EQ((matrix<len_type>{{2, 3}, {2, 1}, {5, 3}}), v2.lengths());
+    CHECK(v2.data() == data1);
+    CHECK(v2.irrep() == 1u);
+    CHECK(v2.num_irreps() == 2u);
+    CHECK(v2.permutation() == dim_vector{2, 1, 0});
+    CHECK(v2.lengths() == matrix<len_type>{{2, 3}, {2, 1}, {5, 3}});
 
     swap(v2, v1);
 
-    EXPECT_EQ(data1, v1.data());
-    EXPECT_EQ(1u, v1.irrep());
-    EXPECT_EQ(2u, v1.num_irreps());
-    EXPECT_EQ((dim_vector{2, 1, 0}), v1.permutation());
-    EXPECT_EQ((matrix<len_type>{{2, 3}, {2, 1}, {5, 3}}), v1.lengths());
+    CHECK(v1.data() == data1);
+    CHECK(v1.irrep() == 1u);
+    CHECK(v1.num_irreps() == 2u);
+    CHECK(v1.permutation() == dim_vector{2, 1, 0});
+    CHECK(v1.lengths() == matrix<len_type>{{2, 3}, {2, 1}, {5, 3}});
 
-    EXPECT_EQ(data2, v2.data());
-    EXPECT_EQ(0u, v2.irrep());
-    EXPECT_EQ(2u, v2.num_irreps());
-    EXPECT_EQ((dim_vector{0, 1, 2}), v2.permutation());
-    EXPECT_EQ((matrix<len_type>{{1, 1}, {6, 3}, {2, 4}}), v2.lengths());
+    CHECK(v2.data() == data2);
+    CHECK(v2.irrep() == 0u);
+    CHECK(v2.num_irreps() == 2u);
+    CHECK(v2.permutation() == dim_vector{0, 1, 2});
+    CHECK(v2.lengths() == matrix<len_type>{{1, 1}, {6, 3}, {2, 4}});
 }
 
-TEST(dpd_varray, slice)
+TEST_CASE("dpd_varray::slice")
 {
     for (auto k : range(layouts.size()))
     {
-        SCOPED_TRACE(k);
+        INFO("k = " << k);
         dpd_marray<double> v1(1, 2, {{2, 3}, {2, 1}, {5, 3}}, layouts[k]);
 
         auto v2 = v1(dpd_range(1, {2}), slice::all, dpd_index{1, 1});
-        EXPECT_EQ(2, v2.dimension());
-        EXPECT_EQ(0, v2.irrep());
-        EXPECT_EQ(2, v2.num_irreps());
-        EXPECT_EQ((matrix<len_type>{{0, 2}, {2, 1}}), v2.lengths());
+        CHECK(v2.dimension() == 2);
+        CHECK(v2.irrep() == 0);
+        CHECK(v2.num_irreps() == 2);
+        CHECK(v2.lengths() == matrix<len_type>{{0, 2}, {2, 1}});
 
         v2.for_each_element<2>([&](double& v, int irrepi, int irrepj, len_type i, len_type j)
         {
-            SCOPED_TRACE(irrepi);
-            SCOPED_TRACE(irrepj);
-            SCOPED_TRACE(i);
-            SCOPED_TRACE(j);
-            EXPECT_EQ(&v1(irrepi,irrepj,1)(i,j,1)-v1.data(), &v-v1.data());
+            INFO("irrepi = " << irrepi);
+            INFO("irrepj = " << irrepj);
+            INFO("i = " << i);
+            INFO("j = " << j);
+            CHECK(&v-v1.data() == &v1(irrepi,irrepj,1)(i,j,1)-v1.data());
         });
 
         v1.for_each_element<3>([&](double& v, int irrepi, int irrepj, int irrepk, len_type i, len_type j, len_type k)
         {
             if (irrepi != 1 || i > 1) return;
             if (irrepk != 1 || k != 1) return;
-            SCOPED_TRACE(irrepi);
-            SCOPED_TRACE(irrepj);
-            SCOPED_TRACE(irrepk);
-            SCOPED_TRACE(i);
-            SCOPED_TRACE(j);
-            SCOPED_TRACE(k);
-            EXPECT_EQ(&v-v1.data(), &v2(irrepi,irrepj)(i,j)-v1.data());
+            INFO("irrepi = " << irrepi);
+            INFO("irrepj = " << irrepj);
+            INFO("irrepk = " << irrepk);
+            INFO("i = " << i);
+            INFO("j = " << j);
+            INFO("k = " << k);
+            CHECK(&v-v1.data() == &v2(irrepi,irrepj)(i,j)-v1.data());
         });
 
         auto v3 = v2(dpd_index{1, 1}, dpd_range(0, {1, 2})(1, {1}));
-        EXPECT_EQ(1, v3.dimension());
-        EXPECT_EQ(1, v3.irrep());
-        EXPECT_EQ(2, v3.num_irreps());
-        EXPECT_EQ((matrix<len_type>{{1, 1}}), v3.lengths());
+        CHECK(v3.dimension() == 1);
+        CHECK(v3.irrep() == 1);
+        CHECK(v3.num_irreps() == 2);
+        CHECK(v3.lengths() == matrix<len_type>{{1, 1}});
 
         v3.for_each_element<1>([&](double& v, int irrepi, len_type i)
         {
-            SCOPED_TRACE(irrepi);
-            SCOPED_TRACE(i);
-            EXPECT_EQ(&v1(1,irrepi,1)(1,i,1)-v1.data(), &v-v1.data());
+            INFO("irrepi = " << irrepi);
+            INFO("i = " << i);
+            CHECK(&v-v1.data() == &v1(1,irrepi,1)(1,i,1)-v1.data());
         });
 
         v1.for_each_element<3>([&](double& v, int irrepi, int irrepj, int irrepk, len_type i, len_type j, len_type k)
@@ -429,30 +417,30 @@ TEST(dpd_varray, slice)
             if (irrepi != 1 || i != 1) return;
             if (irrepj == 0 && i != 1) return;
             if (irrepk != 1 || k != 1) return;
-            SCOPED_TRACE(irrepi);
-            SCOPED_TRACE(irrepj);
-            SCOPED_TRACE(irrepk);
-            SCOPED_TRACE(i);
-            SCOPED_TRACE(j);
-            SCOPED_TRACE(k);
-            EXPECT_EQ(&v-v1.data(), &v3(irrepj)(irrepj == 0 ? j-1 : j)-v1.data());
+            INFO("irrepi = " << irrepi);
+            INFO("irrepj = " << irrepj);
+            INFO("irrepk = " << irrepk);
+            INFO("i = " << i);
+            INFO("j = " << j);
+            INFO("k = " << k);
+            CHECK(&v3(irrepj)(irrepj == 0 ? j-1 : j)-v1.data() == &v-v1.data());
         });
 
         auto v4 = v1({dpd_range(1, {2}), dpd_range(0, {1, 2})(1, {1}), dpd_range(0, {2})(1, {2, 3})});
-        EXPECT_EQ(3, v4.dimension());
-        EXPECT_EQ(1, v4.irrep());
-        EXPECT_EQ(2, v4.num_irreps());
-        EXPECT_EQ((matrix<len_type>{{0, 2}, {1, 1}, {2, 1}}), v4.lengths());
+        CHECK(v4.dimension() == 3);
+        CHECK(v4.irrep() == 1);
+        CHECK(v4.num_irreps() == 2);
+        CHECK(v4.lengths() == matrix<len_type>{{0, 2}, {1, 1}, {2, 1}});
 
         v4.for_each_element<3>([&](double& v, int irrepi, int irrepj, int irrepk, len_type i, len_type j, len_type k)
         {
-            SCOPED_TRACE(irrepi);
-            SCOPED_TRACE(irrepj);
-            SCOPED_TRACE(irrepk);
-            SCOPED_TRACE(i);
-            SCOPED_TRACE(j);
-            SCOPED_TRACE(k);
-            EXPECT_EQ(&v1(irrepi,irrepj,irrepk)(i, irrepj == 0 ? j+1 : j, irrepk == 1 ? k+2 : k)-v1.data(), &v-v1.data());
+            INFO("irrepi = " << irrepi);
+            INFO("irrepj = " << irrepj);
+            INFO("irrepk = " << irrepk);
+            INFO("i = " << i);
+            INFO("j = " << j);
+            INFO("k = " << k);
+            CHECK(&v-v1.data() == &v1(irrepi,irrepj,irrepk)(i, irrepj == 0 ? j+1 : j, irrepk == 1 ? k+2 : k)-v1.data());
         });
 
         v1.for_each_element<3>([&](double& v, int irrepi, int irrepj, int irrepk, len_type i, len_type j, len_type k)
@@ -460,13 +448,13 @@ TEST(dpd_varray, slice)
             if (irrepi != 1 || i > 1) return;
             if (irrepj == 0 && j != 1) return;
             if (k > (irrepk == 0 ? 1 : 2) || k < (irrepk == 0 ? 0 : 2)) return;
-            SCOPED_TRACE(irrepi);
-            SCOPED_TRACE(irrepj);
-            SCOPED_TRACE(irrepk);
-            SCOPED_TRACE(i);
-            SCOPED_TRACE(j);
-            SCOPED_TRACE(k);
-            EXPECT_EQ(&v-v1.data(), &v4(irrepi,irrepj,irrepk)(i, irrepj == 0 ? j-1 : j, irrepk == 1 ? k-2 : k)-v1.data());
+            INFO("irrepi = " << irrepi);
+            INFO("irrepj = " << irrepj);
+            INFO("irrepk = " << irrepk);
+            INFO("i = " << i);
+            INFO("j = " << j);
+            INFO("k = " << k);
+            CHECK(&v-v1.data() == &v4(irrepi,irrepj,irrepk)(i, irrepj == 0 ? j-1 : j, irrepk == 1 ? k-2 : k)-v1.data());
         });
     }
 }

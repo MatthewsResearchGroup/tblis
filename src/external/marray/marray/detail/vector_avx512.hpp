@@ -1,6 +1,8 @@
 #ifndef MARRAY_VECTOR_AVX512_HPP
 #define MARRAY_VECTOR_AVX512_HPP
 
+#if defined(__AVX512F__)
+
 #include <x86intrin.h>
 
 #include "vector.hpp"
@@ -2893,5 +2895,7 @@ struct vector_traits<U, std::enable_if_t<std::is_same<U,int64_t>::value ||
 };
 
 }
+
+#endif
 
 #endif //MARRAY_VECTOR_AVX512_HPP

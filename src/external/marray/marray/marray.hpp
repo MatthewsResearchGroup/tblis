@@ -553,18 +553,29 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
 #endif
         marray(const Expression& other);
 
-        /** @} */
-
         ~marray()
         {
             reset();
         }
 
-        /* *********************************************************************
+        /** @} */
+        /***********************************************************************
          *
-         * Base operations
+         * @name Static helper functions
          *
          **********************************************************************/
+        /** @{ */
+
+        using base_class::size;
+        using base_class::is_contiguous;
+
+        /** @} */
+        /***********************************************************************
+         *
+         * @name Operators
+         *
+         **********************************************************************/
+        /** @{ */
 
         marray& operator=(const marray& other)
         {
@@ -576,7 +587,6 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
             return base_class::operator=(other);
         }
 
-#if !MARRAY_DOXYGEN
         using base_class::operator=;
         using base_class::operator+=;
         using base_class::operator-=;
@@ -584,10 +594,26 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
         using base_class::operator/=;
         using base_class::operator==;
         using base_class::operator!=;
-        using base_class::size;
-        using base_class::is_contiguous;
+
+        /** @} */
+        /***********************************************************************
+         *
+         * @name Views
+         *
+         **********************************************************************/
+        /** @{ */
+
         using base_class::cview;
         using base_class::view;
+
+        /** @} */
+        /***********************************************************************
+         *
+         * @name Iterators
+         *
+         **********************************************************************/
+        /** @{ */
+
         using base_class::cbegin;
         using base_class::begin;
         using base_class::cend;
@@ -596,24 +622,96 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
         using base_class::rbegin;
         using base_class::crend;
         using base_class::rend;
+
+        /** @} */
+        /***********************************************************************
+         *
+         * @name Shift operations
+         *
+         **********************************************************************/
+        /** @{ */
+
         using base_class::shifted;
         using base_class::shifted_up;
         using base_class::shifted_down;
         using base_class::rebased;
+
+        /** @} */
+        /***********************************************************************
+         *
+         * @name Permutation
+         *
+         **********************************************************************/
+        /** @{ */
+
         using base_class::permuted;
         using base_class::transposed;
         using base_class::T;
+
+        /** @} */
+        /***********************************************************************
+         *
+         * @name Dimension change
+         *
+         **********************************************************************/
+        /** @{ */
+
         using base_class::lowered;
+
+        /** @} */
+        /***********************************************************************
+         *
+         * @name Reversal
+         *
+         **********************************************************************/
+        /** @{ */
+
         using base_class::reversed;
+
+        /** @} */
+        /***********************************************************************
+         *
+         * @name Slices
+         *
+         **********************************************************************/
+        /** @{ */
+
         using base_class::cslice;
         using base_class::slice;
         using base_class::cfront;
         using base_class::front;
         using base_class::cback;
         using base_class::back;
+
+        /** @} */
+        /***********************************************************************
+         *
+         * @name Indexing
+         *
+         **********************************************************************/
+        /** @{ */
+
         using base_class::operator[];
         using base_class::operator();
+
+        /** @} */
+        /***********************************************************************
+         *
+         * @name Element-wise iteration
+         *
+         **********************************************************************/
+        /** @{ */
+
         using base_class::for_each_element;
+
+        /** @} */
+        /***********************************************************************
+         *
+         * @name Basic getters
+         *
+         **********************************************************************/
+        /** @{ */
+
         using base_class::corigin;
         using base_class::origin;
         using base_class::cdata;
@@ -625,8 +723,8 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
         using base_class::stride;
         using base_class::strides;
         using base_class::dimension;
-#endif
 
+        /** @} */
         /***********************************************************************
          *
          * @name Reset

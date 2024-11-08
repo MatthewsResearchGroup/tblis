@@ -118,20 +118,20 @@ class dpd_marray_view : public dpd_marray_base<Type, dpd_marray_view<Type>, fals
          *
          **********************************************************************/
 
-        void permute(const array_1d<int>& perm_)
+        void permute(const array_1d<int>& perm)
         {
             auto ndim = dimension();
 
-            MARRAY_ASSERT(perm_.size() == ndim);
+            MARRAY_ASSERT(perm.size() == ndim);
 
             dim_vector new_perm(ndim);
-            dim_vector perm;
-            perm_.slurp(perm);
+            dim_vector perm_vec;
+            perm.slurp(perm_vec);
 
             for (auto i : range(ndim))
-                new_perm[i] = this->perm_[perm[i]];
+                new_perm[i] = perm_[perm_vec[i]];
 
-            this->perm_ = new_perm;
+            perm_ = new_perm;
         }
 
         /***********************************************************************

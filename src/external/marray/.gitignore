@@ -4,7 +4,8 @@
 *.lo
 *.so
 *.dSYM
-bin
+bin/test
+bin/.libs
 lib
 *.gcda
 *.gcno
