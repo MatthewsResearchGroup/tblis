@@ -21,7 +21,7 @@ AC_PROG_EGREP
 AC_PROG_AWK
 AX_BLAS([blas_found=yes])
 AC_PROG_CXX([icpc g++ clang++])
-AX_CXX_COMPILE_STDCXX([17], [noext])
+AX_CXX_COMPILE_STDCXX([20], [noext])
 
 #
 # Apple's sys/cdefs.h redefines __restrict to null in C++ mode (!!!!!!)

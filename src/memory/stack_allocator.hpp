@@ -120,12 +120,6 @@ class stack_allocator
             return a._stacks == b._stacks;
         }
 
-        template <typename U>
-        friend bool operator!=(const stack_allocator& a, const stack_allocator<U>& b)
-        {
-            return a._stacks != b._stacks;
-        }
-
         T* allocate(size_t size)
         {
             if (size*sizeof(T) > _stack_size)

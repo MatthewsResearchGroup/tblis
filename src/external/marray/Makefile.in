@@ -496,7 +496,7 @@ EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 FILECMD = @FILECMD@
 GREP = @GREP@
-HAVE_CXX17 = @HAVE_CXX17@
+HAVE_CXX20 = @HAVE_CXX20@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -1490,12 +1490,12 @@ uninstall-am:
 
 @coverage_TRUE@src/marray/%.hpp: $(srcdir)/marray/%.hpp $(FORCE_COVER)
 @coverage_TRUE@	@mkdir -p $(dir $@)
-@coverage_TRUE@	$(FORCE_COVER) $< -- -xc++ -std=c++17 -I$(srcdir)/marray -I$(srcdir)/third_party/catch2 \
+@coverage_TRUE@	$(FORCE_COVER) $< -- -xc++ -std=c++20 -I$(srcdir)/marray -I$(srcdir)/third_party/catch2 \
 @coverage_TRUE@	    -DMARRAY_ENABLE_ASSERTS -resource-dir `clang++ -print-resource-dir` > $@
 
 @coverage_TRUE@src/test/%.cxx: $(srcdir)/test/%.cxx $(FORCE_COVER) $(headers)
 @coverage_TRUE@	@mkdir -p $(dir $@)
-@coverage_TRUE@	$(FORCE_COVER) $< -- -xc++ -std=c++17 -I$(srcdir)/marray -I$(srcdir)/third_party/catch2 \
+@coverage_TRUE@	$(FORCE_COVER) $< -- -xc++ -std=c++20 -I$(srcdir)/marray -I$(srcdir)/third_party/catch2 \
 @coverage_TRUE@	    -DMARRAY_ENABLE_ASSERTS -resource-dir `clang++ -print-resource-dir` > $@
 
 @coverage_TRUE@src/third_party/catch2/catch_amalgamated.o: src/third_party/catch2/catch_amalgamated.hpp
@@ -1505,7 +1505,7 @@ uninstall-am:
 @coverage_TRUE@	@cp $< $@
 
 @coverage_TRUE@$(FORCE_COVER): $(FORCE_COVER_DIR)
-@coverage_TRUE@	clang++ -O0 -g -std=c++14 `llvm-config --cxxflags` $(FORCE_COVER_DIR)/force_cover.cpp -o $@ \
+@coverage_TRUE@	clang++ -O0 -g -std=c++20 `llvm-config --cxxflags` $(FORCE_COVER_DIR)/force_cover.cpp -o $@ \
 @coverage_TRUE@	    -lclangTooling -lclangASTMatchers -lclangFormat -lclangFrontend -lclangDriver -lclangParse \
 @coverage_TRUE@	    -lclangSerialization -lclangSema -lclangEdit -lclangAnalysis -lclangToolingCore -lclangAST -lclangRewrite \
 @coverage_TRUE@	    -lclangLex -lclangBasic -lclangFrontendTool -lclangRewriteFrontend -lclangStaticAnalyzerFrontend \
