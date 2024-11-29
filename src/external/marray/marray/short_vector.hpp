@@ -505,42 +505,16 @@ class short_vector
             lhs.swap(rhs);
         }
 
-        friend bool operator==(const short_vector& lhs,
-                               const short_vector& rhs)
+        bool operator==(const short_vector& other) const
         {
-            return lhs.size() == rhs.size() &&
-                std::equal(lhs.begin(), lhs.end(), rhs.begin());
+            return size() == other.size() &&
+                   std::equal(begin(), end(), other.begin());
         }
 
-        friend bool operator!=(const short_vector& lhs,
-                               const short_vector& rhs)
+        auto operator<=>(const short_vector& other) const
         {
-            return !(lhs == rhs);
-        }
-
-        friend bool operator<(const short_vector& lhs,
-                              const short_vector& rhs)
-        {
-            return std::lexicographical_compare(lhs.begin(), lhs.end(),
-                                                rhs.begin(), rhs.end());
-        }
-
-        friend bool operator<=(const short_vector& lhs,
-                               const short_vector& rhs)
-        {
-            return !(rhs < lhs);
-        }
-
-        friend bool operator>(const short_vector& lhs,
-                              const short_vector& rhs)
-        {
-            return (rhs < lhs);
-        }
-
-        friend bool operator>=(const short_vector& lhs,
-                               const short_vector& rhs)
-        {
-            return !(lhs < rhs);
+            return std::lexicographical_compare_three_way(begin(), end(),
+                                                          other.begin(), other.end());
         }
 
     protected:

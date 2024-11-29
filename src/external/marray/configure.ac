@@ -7,7 +7,7 @@ AM_MAINTAINER_MODE([disable])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_PROG_CXX([clang++])
-AX_CXX_COMPILE_STDCXX([17], [noext])
+AX_CXX_COMPILE_STDCXX([20], [noext])
 AC_LANG([C++])
 LT_INIT
 

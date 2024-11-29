@@ -593,7 +593,6 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
         using base_class::operator*=;
         using base_class::operator/=;
         using base_class::operator==;
-        using base_class::operator!=;
 
         /** @} */
         /***********************************************************************

@@ -90,9 +90,9 @@ class range_t
                     return val_ == other.val_ && delta_ == other.delta_;
                 }
 
-                bool operator!=(const iterator& other) const
+                auto operator<=>(const iterator& other) const
                 {
-                    return val_ != other.val_ || delta_ != other.delta_;
+                    return val_ <=> other.val_;
                 }
 
                 value_type operator*() const
@@ -156,26 +156,6 @@ class range_t
                 difference_type operator-(const iterator& other) const
                 {
                     return (val_-other.val_)/delta_;
-                }
-
-                bool operator<(const iterator& other) const
-                {
-                    return val_ < other.val_;
-                }
-
-                bool operator<=(const iterator& other) const
-                {
-                    return val_ <= other.val_;
-                }
-
-                bool operator>(const iterator& other) const
-                {
-                    return val_ > other.val_;
-                }
-
-                bool operator>=(const iterator& other) const
-                {
-                    return val_ >= other.val_;
                 }
 
                 value_type operator[](difference_type n) const
