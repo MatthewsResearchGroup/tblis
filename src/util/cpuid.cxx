@@ -246,7 +246,11 @@ int get_cpu_type(int& model, int& part, int& features)
 
     auto pos = ptno.find("0x");
     TBLIS_ASSERT(pos != std::string::npos);
+#if defined(__APPLE__) && defined(__MACH__)
+      part = (int)strtol(ptno.c_str(), (char**)pos, 16);
+#else
     part = strtoi(ptno, pos, 16);
+#endif
 
     return VENDOR_ARM;
 }

@@ -1,5 +1,8 @@
 #include "communicator.h"
 #include "task_set.h"
+#if !defined(_GLIBCXX_STDLIB_H)
+#include <stdlib.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

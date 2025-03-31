@@ -1,7 +1,9 @@
 #ifndef _MARRAY_EXPRESSION_HPP_
 #define _MARRAY_EXPRESSION_HPP_
 
+#if defined (__x86_64__)
 #include <x86intrin.h>
+#endif
 
 #include "utility.hpp"
 #include "vector.hpp"
