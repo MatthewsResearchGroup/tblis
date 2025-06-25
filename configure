@@ -818,6 +818,7 @@ with_length_type
 with_stride_type
 with_label_type
 with_blis_dir
+with_blis_confname
 enable_shared
 enable_static
 enable_pic
@@ -1516,6 +1517,9 @@ Optional Packages:
                           The default value 'auto' first searches using
                           pkg-config and then downloads an internal copy if
                           not found.
+  --with-blis-confname=confname
+                          BLIS configuration to be used if BLIS is downloaded
+                          and built. The default configuration is 'auto'.
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
   --with-sysroot[=DIR]    Search for dependent libraries within DIR (or the
                           compiler's sysroot if not specified).
@@ -7394,6 +7398,16 @@ then :
   withval=$with_blis_dir; blis_dir=$with_blis_dir
 else case e in #(
   e) blis_dir=auto ;;
+esac
+fi
+
+
+# Check whether --with-blis-confname was given.
+if test ${with_blis_confname+y}
+then :
+  withval=$with_blis_confname; blis_confname=$with_blis_confname
+else case e in #(
+  e) blis_confname=auto ;;
 esac
 fi
 
@@ -23212,6 +23226,6 @@ fi
 
 
 if test "x$BUILD_BLIS" = "xyes"; then
-    ( cd download/blis && ./configure -tomp,pthreads -p "$BLIS_PREFIX" --disable-blas --disable-cblas --enable-static --disable-shared auto )
+    ( cd download/blis && ./configure -tomp,pthreads -p "$BLIS_PREFIX" --disable-blas --disable-cblas --enable-static --disable-shared "$blis_confname" )
 fi
 

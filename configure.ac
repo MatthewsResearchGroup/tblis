@@ -176,6 +176,10 @@ AC_ARG_WITH([blis-dir], AS_HELP_STRING([--with-blis-dir=dir],
      first searches using pkg-config and then downloads an internal
      copy if not found.]),
     [blis_dir=$with_blis_dir], [blis_dir=auto])
+AC_ARG_WITH([blis-confname], AS_HELP_STRING([--with-blis-confname=confname],
+    [BLIS configuration to be used if BLIS is downloaded and built.
+     The default configuration is 'auto'.]),
+    [blis_confname=$with_blis_confname], [blis_confname=auto])
 
 ac_cv_search_libs_blis=no
 BUILD_BLIS=no
@@ -252,5 +256,5 @@ AC_OUTPUT
 TBLIS_CONFIG_SUBDIR([src/external/tci])
 
 if test "x$BUILD_BLIS" = "xyes"; then
-    ( cd download/blis && ./configure -tomp,pthreads -p "$BLIS_PREFIX" --disable-blas --disable-cblas --enable-static --disable-shared auto )
+    ( cd download/blis && ./configure -tomp,pthreads -p "$BLIS_PREFIX" --disable-blas --disable-cblas --enable-static --disable-shared "$blis_confname" )
 fi
