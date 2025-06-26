@@ -2,7 +2,11 @@
 #include "task_set.h"
 
 #ifdef __cplusplus
+#include <cstdlib>
+
 extern "C" {
+#else
+#include <stdlib.h>
 #endif
 
 #if TCI_USE_OPENMP_THREADS || TCI_USE_PTHREADS_THREADS || TCI_USE_WINDOWS_THREADS

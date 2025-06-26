@@ -34,6 +34,10 @@ struct vector_traits
 
 #include "vector_sse41.hpp"
 
+#else
+
+#include "vector_generic.hpp"
+
 #endif
 
 #if __GNUC__ >= 6
