@@ -73,13 +73,26 @@ int vpu_count()
         loc = name.find_first_of("- ", loc+1)+1;
 
         auto sku = atoi(name.substr(loc, 4).c_str());
-        if      (8199 >= sku && sku >= 8100) return 2;
+        if      (8399 >= sku && sku >= 8300) return 2; // Gen 3 (Cooper lake & Ice lake).
+        else if (6399 >= sku && sku >= 6300) return 2;
+        else if (5399 >= sku && sku >= 5300) return 2;
+        else if (4399 >= sku && sku >= 4300) return 2;
+        else if (9299 >= sku && sku >= 9200) return 2; // Gen 2.
+        else if (8299 >= sku && sku >= 8200) return 2;
+        else if (6299 >= sku && sku >= 6200) return 2;
+        else if (sku == 5222)                return 2;
+        else if (5299 >= sku && sku >= 5200) return 1;
+        else if (4299 >= sku && sku >= 4200) return 1;
+        else if (3219 >= sku && sku >= 3200) return 1;
+        else if (3299 >= sku && sku >= 3220) return 2; // Gen 2 W.
+        else if (2299 >= sku && sku >= 2220) return 2;
+        else if (8199 >= sku && sku >= 8100) return 2; // Gen 1.
         else if (6199 >= sku && sku >= 6100) return 2;
         else if (sku == 5122)                return 2;
         else if (5199 >= sku && sku >= 5100) return 1;
         else if (4199 >= sku && sku >= 4100) return 1;
         else if (3199 >= sku && sku >= 3100) return 1;
-        else if (2199 >= sku && sku >= 2120) return 2;
+        else if (2199 >= sku && sku >= 2120) return 2; // Gen 1 W.
         else if (2119 >= sku && sku >= 2100) return 1;
         else return -1;
     }
