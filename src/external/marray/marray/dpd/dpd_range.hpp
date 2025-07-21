@@ -3,6 +3,7 @@
 
 #include "../range.hpp"
 #include "../marray_base.hpp"
+#include <type_traits>
 
 namespace MArray
 {
@@ -87,17 +88,10 @@ class dpd_range : public std::array<range_t<len_type>, 8>
 namespace detail
 {
 
-template <typename T, typename=void>
-struct is_dpd_index_or_slice_helper : std::false_type {};
-
-template <>
-struct is_dpd_index_or_slice_helper<dpd_index> : std::true_type {};
-
-template <>
-struct is_dpd_index_or_slice_helper<dpd_range> : std::true_type {};
-
-template <>
-struct is_dpd_index_or_slice_helper<all_t> : std::true_type {};
+template <typename T>
+struct is_dpd_index_or_slice_helper : std::bool_constant<std::is_convertible_v<T,dpd_index> ||
+                                                         std::is_convertible_v<T,dpd_range> ||
+                                                         std::is_same_v<T,all_t>> {};
 
 template <typename T>
 struct is_dpd_index_or_slice : is_dpd_index_or_slice_helper<typename std::decay<T>::type> {};

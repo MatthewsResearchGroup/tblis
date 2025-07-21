@@ -60,12 +60,12 @@ EXTRA_bin_test_DEPENDENCIES = $(headers)
 
 src/marray/%.hpp: $(srcdir)/marray/%.hpp $(FORCE_COVER)
 	@mkdir -p $(dir $@)
-	$(FORCE_COVER) $< -- -xc++ -std=c++20 -I$(srcdir)/marray -I$(srcdir)/third_party/catch2 \
+	$(FORCE_COVER) $< -- -xc++ -std=c++17 -I$(srcdir)/marray -I$(srcdir)/third_party/catch2 \
 	    -DMARRAY_ENABLE_ASSERTS -resource-dir `clang++ -print-resource-dir` > $@
 
 src/test/%.cxx: $(srcdir)/test/%.cxx $(FORCE_COVER) $(headers)
 	@mkdir -p $(dir $@)
-	$(FORCE_COVER) $< -- -xc++ -std=c++20 -I$(srcdir)/marray -I$(srcdir)/third_party/catch2 \
+	$(FORCE_COVER) $< -- -xc++ -std=c++17 -I$(srcdir)/marray -I$(srcdir)/third_party/catch2 \
 	    -DMARRAY_ENABLE_ASSERTS -resource-dir `clang++ -print-resource-dir` > $@
 
 src/third_party/catch2/catch_amalgamated.o: src/third_party/catch2/catch_amalgamated.hpp
@@ -75,7 +75,7 @@ src/third_party/catch2/%: $(srcdir)/third_party/catch2/%
 	@cp $< $@
 
 $(FORCE_COVER): $(FORCE_COVER_DIR)
-	clang++ -O0 -g -std=c++20 `llvm-config --cxxflags` $(FORCE_COVER_DIR)/force_cover.cpp -o $@ \
+	clang++ -O0 -g -std=c++14 `llvm-config --cxxflags` $(FORCE_COVER_DIR)/force_cover.cpp -o $@ \
 	    -lclangTooling -lclangASTMatchers -lclangFormat -lclangFrontend -lclangDriver -lclangParse \
 	    -lclangSerialization -lclangSema -lclangEdit -lclangAnalysis -lclangToolingCore -lclangAST -lclangRewrite \
 	    -lclangLex -lclangBasic -lclangFrontendTool -lclangRewriteFrontend -lclangStaticAnalyzerFrontend \

@@ -20,7 +20,8 @@ struct dpd_layout
 
     layout base() const;
 
-    bool operator==(const dpd_layout&) const = default;
+    bool operator==(dpd_layout other) const { return type == other.type; }
+    bool operator!=(dpd_layout other) const { return type != other.type; }
 };
 
 struct balanced_column_major_layout : dpd_layout

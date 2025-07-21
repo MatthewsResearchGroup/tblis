@@ -245,96 +245,109 @@ class marray_base
 
         /**
          * Reset to an empty view.
+         *
+         * @return   A reference to the view.
          */
-        void reset()
+#if MARRAY_DOXYGEN
+        marray_view& reset()
+#else
+        Derived& reset()
+#endif
         {
             data_ = nullptr;
             base_.clear();
             len_.clear();
             stride_.clear();
+            return static_cast<Derived&>(*this);
         }
 
         /**
          * Reset to a view that wraps an immutable std::vector of compatible type.
          *
-         * @note        Only enabled for one-dimensional views.
+         * @note     Only enabled for one-dimensional views.
          *
-         * @tparam T    Type such that `const T*` is convertible to `Type*`.
+         * @tparam T Type such that `const T*` is convertible to `Type*`.
          *
-         * @param v     The std::vector to wrap.
+         * @param v  The std::vector to wrap.
+         *
+         * @return   A reference to the view.
          */
         template <typename T>
 #if !MARRAY_DOXYGEN
-        std::enable_if_t<(NDim == 1 || NDim == DYNAMIC) && std::is_convertible_v<const T*,pointer>>
+        std::enable_if_t<(NDim == 1 || NDim == DYNAMIC) && std::is_convertible_v<const T*,pointer>,Derived&>
 #else
-        void
+        marray_view&
 #endif
         reset(const std::vector<T>& v)
         {
-            reset({v.size()}, v.data(), {1});
+            return reset({v.size()}, v.data(), {1});
         }
 
         /**
          * Reset to a view that wraps a mutable std::vector of compatible type.
          *
-         * @note        Only enabled for one-dimensional views.
+         * @note     Only enabled for one-dimensional views.
          *
-         * @tparam T    Type such that `T*` is convertible to `Type*`.
+         * @tparam T Type such that `T*` is convertible to `Type*`.
          *
-         * @param v     The std::vector to wrap.
+         * @param v  The std::vector to wrap.
+         *
+         * @return   A reference to the view.
          */
         template <typename T>
 #if !MARRAY_DOXYGEN
-        std::enable_if_t<(NDim == 1 || NDim == DYNAMIC) && std::is_convertible_v<T*,pointer>>
+        std::enable_if_t<(NDim == 1 || NDim == DYNAMIC) && std::is_convertible_v<T*,pointer>,Derived&>
 #else
-        void
+        marray_view&
 #endif
         reset(std::vector<T>& v)
         {
-            reset({v.size()}, v.data(), {1});
+            return reset({v.size()}, v.data(), {1});
         }
 
         /**
          * Reset to a view of the given tensor, view, or partially-indexed tensor.
          *
-         * @param other     The tensor, view, or partially-indexed tensor to view.
-         *                  If this is a mutable view (the value type is not
-         *                  const-qualified), then `other` may not be a const-
-         *                  qualified tensor instance or a view with a const-
-         *                  qualified value type. May be either an lvalue- or
-         *                  rvalue-reference.
+         * @param other The tensor, view, or partially-indexed tensor to view.
+         *              If this is a mutable view (the value type is not
+         *              const-qualified), then `other` may not be a const-
+         *              qualified tensor instance or a view with a const-
+         *              qualified value type. May be either an lvalue- or
+         *              rvalue-reference.
+         *
+         * @return      A reference to the view.
          */
 #if MARRAY_DOXYGEN
-        void reset(tensor_or_view other);
+        marray_view& reset(tensor_or_view other);
 #else
         template <typename U, int N, bool O, typename D>
-        void reset(marray_base<U, N, D, O>& other)
+        Derived& reset(marray_base<U, N, D, O>& other)
         {
             static_assert(NDim == DYNAMIC || N == DYNAMIC || NDim == N);
             inherit_bbox_(other);
-            reset(other.lengths(), other.data(), other.bases(), other.strides());
+            return reset(other.lengths(), other.data(), other.bases(), other.strides());
         }
 
         template <typename U, int N, bool O, typename D>
-        void reset(marray_base<U, N, D, O>&& other)
+        Derived& reset(marray_base<U, N, D, O>&& other)
         {
-            reset(other);
+            return reset(other);
         }
 
         /* Inherit docs */
         template <typename U, int N, bool O, typename D>
-        void reset(const marray_base<U, N, D, O>& other)
+        Derived& reset(const marray_base<U, N, D, O>& other)
         {
             static_assert(NDim == DYNAMIC || N == DYNAMIC || NDim == N);
             inherit_bbox_(other);
-            reset(other.lengths(), other.data(), other.bases(), other.strides());
+            return reset(other.lengths(), other.data(), other.bases(), other.strides());
         }
 
         /* Inherit docs */
         template <typename U, int N, int I, typename... D>
-        void reset(const marray_slice<U, N, I, D...>& other)
+        Derived& reset(const marray_slice<U, N, I, D...>& other)
         {
-            reset(other.view());
+            return reset(other.view());
         }
 #endif
 
@@ -379,30 +392,32 @@ class marray_base
          *                    - `4: view.reset(len, ptr, {-1, 0, 2}, {144, 12, 1})`
          *                    - `4: view.reset(len, ptr, FORTRAN, std_vector_of_strides)`
          *                    - `4: view.reset(len, ptr, std_list_of_bases, CXX)`
+         *
+         * @return      A reference to the view.
          */
  #if MARRAY_DOXYGEN
-        void reset(shape len, pointer ptr, base_and_or_layout layout_and_indexing);
+        marray_view& reset(shape len, pointer ptr, base_and_or_layout layout_and_indexing);
  #else
-        void reset(const array_1d<len_type>& len, pointer ptr)
+        Derived& reset(const array_1d<len_type>& len, pointer ptr)
         {
-            reset(len, ptr, DEFAULT_BASE, DEFAULT_LAYOUT);
+            return reset(len, ptr, DEFAULT_BASE, DEFAULT_LAYOUT);
         }
 
         /* Inherit docs */
-        void reset(const array_1d<len_type>& len, pointer ptr, const index_base& base)
+        Derived& reset(const array_1d<len_type>& len, pointer ptr, const index_base& base)
         {
-            reset(len, ptr, base, DEFAULT_LAYOUT);
+            return reset(len, ptr, base, DEFAULT_LAYOUT);
         }
 
         /* Inherit docs */
-        void reset(const array_1d<len_type>& len, pointer ptr, const layout_like& stride)
+        Derived& reset(const array_1d<len_type>& len, pointer ptr, const layout_like& stride)
         {
-            reset(len, ptr, DEFAULT_BASE, stride);
+            return reset(len, ptr, DEFAULT_BASE, stride);
         }
 
         /* Inherit docs */
-        void reset(const array_1d<len_type>& len, pointer ptr, const base_like& base,
-                   const layout_like& stride)
+        Derived& reset(const array_1d<len_type>& len, pointer ptr, const base_like& base,
+                       const layout_like& stride)
         {
             MARRAY_ASSERT(len.size() > 0);
             MARRAY_ASSERT(NDim == DYNAMIC || NDim == len.size());
@@ -418,18 +433,20 @@ class marray_base
                 MARRAY_ASSERT(len_[i] >= 0);
 
             set_bbox_(*this);
+
+            return static_cast<Derived&>(*this);
         }
 
         /* Inherit docs */
-        void reset(const array_1d<len_type>& len, pointer ptr, c_cxx_t)
+        Derived& reset(const array_1d<len_type>& len, pointer ptr, c_cxx_t)
         {
-            reset(len, ptr, CXX, CXX);
+            return reset(len, ptr, CXX, CXX);
         }
 
         /* Inherit docs */
-        void reset(const array_1d<len_type>& len, pointer ptr, fortran_t)
+        Derived& reset(const array_1d<len_type>& len, pointer ptr, fortran_t)
         {
-            reset(len, ptr, FORTRAN, FORTRAN);
+            return reset(len, ptr, FORTRAN, FORTRAN);
         }
 #endif
 
@@ -459,17 +476,19 @@ class marray_base
          *                  [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR), [C](@ref MArray::C), [CXX](@ref MArray::CXX),
          *                  [FORTRAN](@ref MArray::FORTRAN), [MATLAB](@ref MArray::MATLAB). If not specified,
          *                  the default layout is used.
+         *
+         * @return      A reference to the view.
          */
 #if MARRAY_DOXYGEN
-        void reset(indices begin, indices end, pointer ptr, layout_or_strides stride = DEFAULT_LAYOUT);
+        marray_view& reset(indices begin, indices end, pointer ptr, layout_or_strides stride = DEFAULT_LAYOUT);
 #else
-        void reset(const array_1d<len_type>& begin, const array_1d<len_type>& end, pointer ptr)
+        Derived& reset(const array_1d<len_type>& begin, const array_1d<len_type>& end, pointer ptr)
         {
-            reset(begin, end, ptr, DEFAULT_LAYOUT);
+            return reset(begin, end, ptr, DEFAULT_LAYOUT);
         }
 
         /* Inherit docs */
-        void reset(const array_1d<len_type>& begin, const array_1d<len_type>& end, pointer ptr, const layout_like& stride)
+        Derived& reset(const array_1d<len_type>& begin, const array_1d<len_type>& end, pointer ptr, const layout_like& stride)
         {
             MARRAY_ASSERT(begin.size() == end.size());
 
@@ -480,7 +499,7 @@ class marray_base
             for (auto i : range(len.size()))
                 len[i] -= base[i];
 
-            reset(len, ptr, base, stride);
+            return reset(len, ptr, base, stride);
         }
 #endif
 
@@ -1033,14 +1052,14 @@ class marray_base
         bool operator==(tensor_or_view other) const;
 #else
         template <typename U, int N, typename D, bool O>
-        friend bool operator==(const marray_base& lhs, const marray_base<U, N, D, O>& rhs)
+        bool operator==(const marray_base<U, N, D, O>& other) const
         {
-            if (lhs.lengths() != rhs.lengths() || !lhs.dimension())
+            if (lengths() != other.lengths() || !dimension())
                 return false;
 
-            auto it = make_iterator(lhs.lengths(), lhs.strides(), rhs.strides());
-            auto a = lhs.data();
-            auto b = rhs.data();
+            auto it = make_iterator(lengths(), strides(), other.strides());
+            auto a = data();
+            auto b = other.data();
             while (it.next(a, b))
             {
                 if (*a == *b) continue;
@@ -1055,6 +1074,32 @@ class marray_base
         bool operator==(const marray_slice<U, N, I, D...>& other) const
         {
             return *this == other.view();
+        }
+#endif
+
+        /**
+         * Return false if this tensor is the same size and shape and has the same elements
+         * as another tensor.
+         *
+         * @param other     A tensor or tensor view against which to check.
+         *
+         * @return          False if all elements match, true otherwise. If the tensors
+         *                  are not the same size and shape, then true.
+         */
+#if MARRAY_DOXYGEN
+        bool operator!=(tensor_or_view other) const;
+#else
+        template <typename U, int N, typename D, bool O>
+        bool operator!=(const marray_base<U, N, D, O>& other) const
+        {
+            return !(*this == other);
+        }
+
+        /* Inherit docs */
+        template <typename U, int N, int I, typename... D>
+        bool operator!=(const marray_slice<U, N, I, D...>& other) const
+        {
+            return *this != other.view();
         }
 #endif
 

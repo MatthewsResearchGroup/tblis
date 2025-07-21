@@ -356,6 +356,7 @@ class marray_view : public marray_base<Type, NDim, marray_view<Type, NDim>, fals
         using base_class::operator*=;
         using base_class::operator/=;
         using base_class::operator==;
+        using base_class::operator!=;
 
         /** @} */
         /***********************************************************************

@@ -29,9 +29,9 @@ class marray_iterator
             return dim_ == other.dim_ && i_ == other.i_;
         }
 
-        auto operator<=>(const marray_iterator& other) const
+        bool operator!=(const marray_iterator& other) const
         {
-            return i_ <=> other.i_;
+            return !(*this == other);
         }
 
         value_type operator*() const
@@ -95,6 +95,26 @@ class marray_iterator
         difference_type operator-(const marray_iterator& other) const
         {
             return i_ - other.i_;
+        }
+
+        bool operator<(const marray_iterator& other) const
+        {
+            return i_ < other.i_;
+        }
+
+        bool operator<=(const marray_iterator& other) const
+        {
+            return !(other < *this);
+        }
+
+        bool operator>(const marray_iterator& other) const
+        {
+            return other < *this;
+        }
+
+        bool operator>=(const marray_iterator& other) const
+        {
+            return !(*this < other);
         }
 
         value_type operator[](difference_type n) const

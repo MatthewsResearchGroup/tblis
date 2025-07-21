@@ -24,8 +24,7 @@ using complex_type_t = typename complex_type<T>::type;
 
 template <typename T> struct is_complex             : std::false_type {};
 template <typename T> struct is_complex<complex<T>> :  std::true_type {};
-template <typename T>
-constexpr bool is_complex_v() { return is_complex<T>::value; }
+template <typename T> constexpr static auto is_complex_v = is_complex<T>::value;
 template <typename T, typename U=void>
 using enable_if_complex = enable_if<is_complex<T>::value,U>;
 template <typename T, typename U=void>

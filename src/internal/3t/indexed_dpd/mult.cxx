@@ -358,6 +358,8 @@ void mult_block_fuse_AB(type_t type, const communicator& comm, const config& cfg
     });
 }
 
+//if(comm.thread_num() == 0) comm.thread_master
+//print the information is given
 void mult_block_fuse_BC(type_t type, const communicator& comm, const config& cfg,
                         const scalar& alpha,
                         bool conj_A, const indexed_dpd_marray_view<char>& A,
@@ -398,6 +400,7 @@ void mult_block_fuse_BC(type_t type, const communicator& comm, const config& cfg
     auto dpd_B = B[0];
     auto dpd_C = C[0];
 
+    //print task list
     comm.do_tasks_deferred(nirrep*nidx_C*group_AC.dense_nblock*group_BC.dense_nblock,
                            group_AB.dense_size*group_AC.dense_size*group_BC.dense_size*group_AB.dense_nblock/inout_ratio,
     [&](communicator::deferred_task_set& tasks)
@@ -427,6 +430,7 @@ void mult_block_fuse_BC(type_t type, const communicator& comm, const config& cfg
                 for (stride_type block_AC = 0;block_AC < group_AC.dense_nblock;block_AC++)
                 for (stride_type block_BC = 0;block_BC < group_BC.dense_nblock;block_BC++)
                 {
+                    //print task lists
                     tasks.visit(idx++,
                     [&,idx_A,idx_C,next_A,next_C,
                      irrep_AB,irrep_AC,irrep_BC,block_AC,block_BC]
@@ -1430,7 +1434,7 @@ void mult(type_t type, const communicator& comm, const config& cfg,
                           conj_B, B, idx_B_AB, idx_B_BC, idx_B_ABC,
                                   C, idx_C_AC, idx_C_BC, idx_C_ABC);
     }
-    else
+    else //this is what it is called in (t)
     {
         mult_block(type, comm, cfg,
                    alpha, conj_A, A, idx_A_AB, idx_A_AC,

@@ -593,6 +593,7 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
         using base_class::operator*=;
         using base_class::operator/=;
         using base_class::operator==;
+        using base_class::operator!=;
 
         /** @} */
         /***********************************************************************
@@ -733,8 +734,10 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
 
         /**
          * Reset the tensor to an empty state, with all lengths zero.
+         *
+         * @return      A reference to the marray.
          */
-        void reset()
+        marray& reset()
         {
             if (storage_.size)
             {
@@ -749,25 +752,30 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
             base_class::reset();
             initial_base_ = DEFAULT_BASE;
             layout_ = DEFAULT_LAYOUT;
+
+            return *this;
         }
 
         /**
          * Re-initialize the tensor by moving the data from another tensor.
          *
          * @param other The tensor from which to move. It is left in the state as if @ref reset() were called on it.
+         *
+         * @return      A reference to the marray.
          */
 #if MARRAY_DOXYGEN
-        void reset(marray&& other)
+        marray& reset(marray&& other)
 #else
         // The following is necessary to work around a defect in C++ whereby explicit
         // constructors are NOT disregarded in overload resolution, leading to an
         // ambiguity between this constructor and reset(array_1d) in something like
         // x.reset({1,2})
         template <typename T, typename=std::enable_if_t<std::is_same_v<T,marray>>>
-        void reset(T&& other)
+        marray& reset(T&& other)
 #endif
         {
             swap(other);
+            return *this;
         }
 
         /**
@@ -778,16 +786,18 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
          * @tparam T    Type such that `T` is convertible to `Type`.
          *
          * @param v     The std::vector to copy.
+         *
+         * @return      A reference to the marray.
          */
         template <typename T>
 #if !MARRAY_DOXYGEN
-        std::enable_if_t<(NDim == 1 || NDim == DYNAMIC) && std::is_convertible_v<T,value_type>>
+        std::enable_if_t<(NDim == 1 || NDim == DYNAMIC) && std::is_convertible_v<T,value_type>,marray&>
 #else
-        void
+        marray&
 #endif
         reset(const std::vector<T>& v)
         {
-            reset(marray_view<const T,1>{v});
+            return reset(marray_view<const T,1>{v});
         }
 
         /**
@@ -796,29 +806,31 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
          * If `other` is a tensor ([marray](@ref MArray::marray)), then its base and layout are inherited.
          * Otherwise the default base and layout are used.
          *
-         * @param other     The tensor, view, or partially-indexed tensor to copy.
+         * @param other The tensor, view, or partially-indexed tensor to copy.
+         *
+         * @return      A reference to the marray.
          */
 #if MARRAY_DOXYGEN
-        void reset(tensor_or_view other);
+        marray& reset(tensor_or_view other);
 #else
         template <typename U, int N, int I, typename... D>
-        void reset(const marray_slice<U, N, I, D...>& other)
+        marray& reset(const marray_slice<U, N, I, D...>& other)
         {
-            reset(other.view(), DEFAULT_BASE, DEFAULT_LAYOUT);
+            return reset(other.view(), DEFAULT_BASE, DEFAULT_LAYOUT);
         }
 
         /* Inherit docs */
         template <typename U, int N, typename D, bool O>
-        void reset(const marray_base<U, N, D, O>& other)
+        marray& reset(const marray_base<U, N, D, O>& other)
         {
-            reset(other, DEFAULT_BASE, DEFAULT_LAYOUT);
+            return reset(other, DEFAULT_BASE, DEFAULT_LAYOUT);
         }
 
         /* Inherit docs */
         template <typename U, int N, typename A>
-        void reset(const marray<U, N, A>& other)
+        marray& reset(const marray<U, N, A>& other)
         {
-            reset(other, other.initial_base_, other.layout_);
+            return reset(other, other.initial_base_, other.layout_);
         }
 #endif
 
@@ -828,31 +840,33 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
          * If `other` is a tensor ([marray](@ref MArray::marray)), then its base is inherited.
          * Otherwise the default base is used.
          *
-         * @param other     The tensor, view, or partially-indexed tensor to copy.
+         * @param other  The tensor, view, or partially-indexed tensor to copy.
          *
-         * @param layout    The layout to use for the copied data.
+         * @param layout The layout to use for the copied data.
+         *
+         * @return       A reference to the marray.
          */
 #if MARRAY_DOXYGEN
-        void reset(tensor_or_view other, layout layout);
+        marray& reset(tensor_or_view other, layout layout);
 #else
         template <typename U, int N, int I, typename... D>
-        void reset(const marray_slice<U, N, I, D...>& other, layout layout)
+        marray& reset(const marray_slice<U, N, I, D...>& other, layout layout)
         {
-            reset(other.view(), DEFAULT_BASE, layout);
+            return reset(other.view(), DEFAULT_BASE, layout);
         }
 
         /* Inherit docs */
         template <typename U, int N, typename D, bool O>
-        void reset(const marray_base<U, N, D, O>& other, layout layout)
+        marray& reset(const marray_base<U, N, D, O>& other, layout layout)
         {
-            reset(other, DEFAULT_BASE, layout);
+            return reset(other, DEFAULT_BASE, layout);
         }
 
         /* Inherit docs */
         template <typename U, int N, typename A>
-        void reset(const marray<U, N, A>& other, layout layout)
+        marray& reset(const marray<U, N, A>& other, layout layout)
         {
-            reset(other, other.initial_base_, layout);
+            return reset(other, other.initial_base_, layout);
         }
 #endif
 
@@ -862,55 +876,59 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
          * If `other` is a tensor ([marray](@ref MArray::marray)), then its layout is inherited.
          * Otherwise the default layout is used.
          *
-         * @param other     The tensor, view, or partially-indexed tensor to copy.
+         * @param other The tensor, view, or partially-indexed tensor to copy.
          *
-         * @param base      The base to use for the copied data.
+         * @param base  The base to use for the copied data.
+         *
+         * @return      A reference to the marray.
          */
 #if MARRAY_DOXYGEN
-        void reset(tensor_or_view other, base base);
+        marray& reset(tensor_or_view other, base base);
 #else
         template <typename U, int N, int I, typename... D>
-        void reset(const marray_slice<U, N, I, D...>& other, MArray::index_base base)
+        marray& reset(const marray_slice<U, N, I, D...>& other, MArray::index_base base)
         {
-            reset(other.view(), base, DEFAULT_LAYOUT);
+            return reset(other.view(), base, DEFAULT_LAYOUT);
         }
 
         /* Inherit docs */
         template <typename U, int N, typename D, bool O>
-        void reset(const marray_base<U, N, D, O>& other, MArray::index_base base)
+        marray& reset(const marray_base<U, N, D, O>& other, MArray::index_base base)
         {
-            reset(other, base, DEFAULT_LAYOUT);
+            return reset(other, base, DEFAULT_LAYOUT);
         }
 
         /* Inherit docs */
         template <typename U, int N, typename A>
-        void reset(const marray<U, N, A>& other, MArray::index_base base)
+        marray& reset(const marray<U, N, A>& other, MArray::index_base base)
         {
-            reset(other, base, other.layout_);
+            return reset(other, base, other.layout_);
         }
 #endif
 
         /**
          * Re-initialize the tensor by copying another tensor or tensor view, with specified base and layout.
          *
-         * @param other     The tensor, view, or partially-indexed tensor to copy.
+         * @param other  The tensor, view, or partially-indexed tensor to copy.
          *
-         * @param base      The base to use for the copied data.
+         * @param base   The base to use for the copied data.
          *
-         * @param layout    The layout to use for the copied data.
+         * @param layout The layout to use for the copied data.
+         *
+         * @return       A reference to the marray.
          */
 #if MARRAY_DOXYGEN
-        void reset(tensor_or_view other, base base, layout layout);
+        marray& reset(tensor_or_view other, base base, layout layout);
 #else
         template <typename U, int N, int I, typename... D>
-        void reset(const marray_slice<U, N, I, D...>& other, MArray::index_base base, layout layout)
+        marray& reset(const marray_slice<U, N, I, D...>& other, MArray::index_base base, layout layout)
         {
-            reset(other.view(), base, layout);
+            return reset(other.view(), base, layout);
         }
 
         /* Inherit docs */
         template <typename U, int N, typename D, bool O>
-        void reset(const marray_base<U, N, D, O>& other, MArray::index_base base, layout layout)
+        marray& reset(const marray_base<U, N, D, O>& other, MArray::index_base base, layout layout)
         {
             if (std::is_scalar<Type>::value)
             {
@@ -922,149 +940,172 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
             }
 
             base_class::template operator=<>(other);
+
+            return *this;
         }
 #endif
 
         /**
          * Re-initialize the tensor by copying another tensor or tensor view, with FORTRAN/MATLAB layout.
          *
-         * @param other     The tensor, view, or partially-indexed tensor to copy.
+         * @param other   The tensor, view, or partially-indexed tensor to copy.
          *
-         * @param fortran   The token [FORTRAN](@ref MArray::FORTRAN) or [MATLAB](@ref MArray::MATLAB).
+         * @param fortran The token [FORTRAN](@ref MArray::FORTRAN) or [MATLAB](@ref MArray::MATLAB).
+         *
+         * @return        A reference to the marray.
          */
 #if MARRAY_DOXYGEN
-        void reset(tensor_or_view other, fortran_t fortran);
+        marray& reset(tensor_or_view other, fortran_t fortran);
 #else
         template <typename U, int N, int I, typename... D>
-        void reset(const marray_slice<U, N, I, D...>& other, fortran_t)
+        marray& reset(const marray_slice<U, N, I, D...>& other, fortran_t)
         {
-            reset(other.view(), BASE_ONE, COLUMN_MAJOR);
+            return reset(other.view(), BASE_ONE, COLUMN_MAJOR);
         }
 
         /* Inherit docs */
         template <typename U, int N, typename D, bool O>
-        void reset(const marray_base<U, N, D, O>& other, fortran_t)
+        marray& reset(const marray_base<U, N, D, O>& other, fortran_t)
         {
-            reset(other, BASE_ONE, COLUMN_MAJOR);
+            return reset(other, BASE_ONE, COLUMN_MAJOR);
         }
 #endif
 
         /**
          * Re-initialize to a tensor of the specified shape and fill value.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists, except when
-         *              `val` is not given. In this case, use
-         *              uniform initialization syntax.
+         * @param len The length of each dimension. May be any one-dimensional
+         *            container type with elements convertible to tensor
+         *            lengths, including initializer lists, except when
+         *            `val` is not given. In this case, use
+         *            uniform initialization syntax.
          *
-         * @param val       Initialize all elements to this value. If not specified,
-         *                  use value-initialization.
+         * @param val Initialize all elements to this value. If not specified,
+         *            use value-initialization.
+         *
+         * @return    A reference to the marray.
          */
-        void reset(const array_1d<len_type>& len, const Type& val=Type())
+        marray& reset(const array_1d<len_type>& len, const Type& val=Type())
         {
-            reset(len, val, DEFAULT_BASE, DEFAULT_LAYOUT);
+            return reset(len, val, DEFAULT_BASE, DEFAULT_LAYOUT);
         }
 
         /**
          * Re-initialize to a tensor of the specified shape and fill value.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len           The length of each dimension. May be any one-dimensional
+         *                      container type with elements convertible to tensor
+         *                      lengths, including initializer lists.
          *
-         * @param uninitialized   The token @ref uninitialized.
+         * @param uninitialized The token @ref uninitialized.
+         *
+         * @return              A reference to the marray.
          */
 #if MARRAY_DOXYGEN
-        void reset(const array_1d<len_type>& len, uninitialized_t uninitialized)
+        marray& reset(const array_1d<len_type>& len, uninitialized_t uninitialized)
 #else
-        void reset(const array_1d<len_type>& len, uninitialized_t)
+        marray& reset(const array_1d<len_type>& len, uninitialized_t)
 #endif
         {
-            reset(len, uninitialized, DEFAULT_BASE, DEFAULT_LAYOUT);
+            return reset(len, uninitialized, DEFAULT_BASE, DEFAULT_LAYOUT);
         }
 
         /**
          * Re-initialize to a tensor of the specified shape and with the given layout.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len    The length of each dimension. May be any one-dimensional
+         *               container type with elements convertible to tensor
+         *               lengths, including initializer lists.
          *
-         * @param layout    The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         * @param layout The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or
+         *               [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         *
+         * @return       A reference to the marray.
          */
-        void reset(const array_1d<len_type>& len, layout layout)
+        marray& reset(const array_1d<len_type>& len, layout layout)
         {
-            reset(len, Type(), DEFAULT_BASE, layout);
+            return reset(len, Type(), DEFAULT_BASE, layout);
         }
 
         /**
          * Re-initialize to a tensor of the specified shape and with the given fill value and layout.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len    The length of each dimension. May be any one-dimensional
+         *               container type with elements convertible to tensor
+         *               lengths, including initializer lists.
          *
-         * @param val       Initialize all elements to this value.
+         * @param val    Initialize all elements to this value.
          *
-         * @param layout    The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         * @param layout The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or
+         *               [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         *
+         * @return       A reference to the marray.
          */
-        void reset(const array_1d<len_type>& len, const Type& val, layout layout)
+        marray& reset(const array_1d<len_type>& len, const Type& val, layout layout)
         {
-            reset(len, val, DEFAULT_BASE, layout);
+            return reset(len, val, DEFAULT_BASE, layout);
         }
 
         /**
          * Re-initialize to a tensor of the specified shape and with the given layout and
          * without initializing tensor elements.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len           The length of each dimension. May be any one-dimensional
+         *                      container type with elements convertible to tensor
+         *                      lengths, including initializer lists.
          *
-         * @param uninitialized   The token @ref uninitialized.
+         * @param uninitialized The token @ref uninitialized.
          *
-         * @param layout    The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         * @param layout        The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or
+         *                      [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         *
+         * @return              A reference to the marray.
          */
 #if MARRAY_DOXYGEN
-        void reset(const array_1d<len_type>& len, uninitialized_t uninitialized, layout layout)
+        marray& reset(const array_1d<len_type>& len, uninitialized_t uninitialized, layout layout)
 #else
-        void reset(const array_1d<len_type>& len, uninitialized_t, layout layout)
+        marray& reset(const array_1d<len_type>& len, uninitialized_t, layout layout)
 #endif
         {
-            reset(len, uninitialized, DEFAULT_BASE, layout);
+            return reset(len, uninitialized, DEFAULT_BASE, layout);
         }
 
         /**
          * Re-initialize to a tensor of the specified shape and with the given base.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len  The length of each dimension. May be any one-dimensional
+         *             container type with elements convertible to tensor
+         *             lengths, including initializer lists.
          *
-         * @param base    The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
-         *                [MATLAB](@ref MArray::MATLAB)).
+         * @param base The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or
+         *             [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
+         *             [MATLAB](@ref MArray::MATLAB)).
+         *
+         * @return     A reference to the marray.
          */
-        void reset(const array_1d<len_type>& len, MArray::index_base base)
+        marray& reset(const array_1d<len_type>& len, MArray::index_base base)
         {
-            reset(len, Type(), base, DEFAULT_LAYOUT);
+            return reset(len, Type(), base, DEFAULT_LAYOUT);
         }
 
         /**
          * Re-initialize to a tensor of the specified shape and with the given fill value and base.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len  The length of each dimension. May be any one-dimensional
+         *             container type with elements convertible to tensor
+         *             lengths, including initializer lists.
          *
-         * @param val       Initialize all elements to this value.
+         * @param val  Initialize all elements to this value.
          *
-         * @param base    The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
-         *                [MATLAB](@ref MArray::MATLAB)).
+         * @param base The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or
+         *             [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
+         *             [MATLAB](@ref MArray::MATLAB)).
+         *
+         * @return     A reference to the marray.
          */
-        void reset(const array_1d<len_type>& len, const Type& val, MArray::index_base base)
+        marray& reset(const array_1d<len_type>& len, const Type& val, MArray::index_base base)
         {
-            reset(len, val, base, DEFAULT_LAYOUT);
+            return reset(len, val, base, DEFAULT_LAYOUT);
         }
 
         /**
@@ -1081,70 +1122,83 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
          *                [MATLAB](@ref MArray::MATLAB)).
          */
 #if MARRAY_DOXYGEN
-        void reset(const array_1d<len_type>& len, uninitialized_t uninitialized, base base)
+        marray& reset(const array_1d<len_type>& len, uninitialized_t uninitialized, base base)
 #else
-        void reset(const array_1d<len_type>& len, uninitialized_t, MArray::index_base base)
+        marray& reset(const array_1d<len_type>& len, uninitialized_t, MArray::index_base base)
 #endif
         {
-            reset(len, uninitialized, base, DEFAULT_LAYOUT);
+            return reset(len, uninitialized, base, DEFAULT_LAYOUT);
         }
 
         /**
          * Re-initialize to a tensor of the specified shape and with the given base and layout.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len    The length of each dimension. May be any one-dimensional
+         *               container type with elements convertible to tensor
+         *               lengths, including initializer lists.
          *
-         * @param base    The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
-         *                [MATLAB](@ref MArray::MATLAB)).
+         * @param base   The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or
+         *               [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
+         *               [MATLAB](@ref MArray::MATLAB)).
          *
-         * @param layout    The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         * @param layout The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or
+         *               [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         *
+         * @return       A reference to the marray.
          */
-        void reset(const array_1d<len_type>& len, MArray::index_base base, layout layout)
+        marray& reset(const array_1d<len_type>& len, MArray::index_base base, layout layout)
         {
-            reset(len, Type(), base, layout);
+            return reset(len, Type(), base, layout);
         }
 
         /**
          * Re-initialize to a tensor of the specified shape and with the given fill value, base, and layout.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len    The length of each dimension. May be any one-dimensional
+         *               container type with elements convertible to tensor
+         *               lengths, including initializer lists.
          *
-         * @param val       Initialize all elements to this value.
+         * @param val    Initialize all elements to this value.
          *
-         * @param base    The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
-         *                [MATLAB](@ref MArray::MATLAB)).
+         * @param base   The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or
+         *               [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
+         *               [MATLAB](@ref MArray::MATLAB)).
          *
-         * @param layout    The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         * @param layout The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or
+         *               [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         *
+         * @return       A reference to the marray.
          */
-        void reset(const array_1d<len_type>& len, const Type& val, MArray::index_base base, layout layout)
+        marray& reset(const array_1d<len_type>& len, const Type& val, MArray::index_base base, layout layout)
         {
             reset(len, uninitialized, base, layout);
             std::uninitialized_fill_n(data(), size(), val);
+            return *this;
         }
 
         /**
          * Re-initialize to a tensor of the specified shape and with the given base and layout, and
          * without initializing tensor elements.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len           The length of each dimension. May be any one-dimensional
+         *                      container type with elements convertible to tensor
+         *                      lengths, including initializer lists.
          *
-         * @param uninitialized   The token @ref uninitialized.
+         * @param uninitialized The token @ref uninitialized.
          *
-         * @param base    The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
-         *                [MATLAB](@ref MArray::MATLAB)).
+         * @param base          The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or
+         *                      [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
+         *                      [MATLAB](@ref MArray::MATLAB)).
          *
-         * @param layout    The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         * @param layout        The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or
+         *                      [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         *
+         * @return              A reference to the marray.
          */
 #if MARRAY_DOXYGEN
-        void reset(const array_1d<len_type>& len, uninitialized_t uninitialized, base base, layout layout)
+        marray& reset(const array_1d<len_type>& len, uninitialized_t uninitialized, base base, layout layout)
 #else
-        void reset(const array_1d<len_type>& len, uninitialized_t, MArray::index_base base, layout layout)
+        marray& reset(const array_1d<len_type>& len, uninitialized_t, MArray::index_base base, layout layout)
 #endif
         {
             reset();
@@ -1153,101 +1207,116 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
             layout_ = layout;
             storage_.size = size(len);
             base_class::reset(len, alloc_traits::allocate(storage_, storage_.size), base, layout);
+
+            return *this;
         }
 
         /**
          * Re-initialize to a tensor of the specified shape and with the given base and layout.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len     The length of each dimension. May be any one-dimensional
+         *                container type with elements convertible to tensor
+         *                lengths, including initializer lists.
          *
-         * @param layout    The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         * @param layout  The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or
+         *                [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
          *
-         * @param base    The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
+         * @param base    The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or
+         *                [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
          *                [MATLAB](@ref MArray::MATLAB)).
+         *
+         * @return        A reference to the marray.
          */
-        void reset(const array_1d<len_type>& len, layout layout, MArray::index_base base)
+        marray& reset(const array_1d<len_type>& len, layout layout, MArray::index_base base)
         {
-            reset(len, Type(), base, layout);
+            return reset(len, Type(), base, layout);
         }
 
         /**
          * Re-initialize to a tensor of the specified shape and with the given fill value, base, and layout.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len    The length of each dimension. May be any one-dimensional
+         *               container type with elements convertible to tensor
+         *               lengths, including initializer lists.
          *
-         * @param val       Initialize all elements to this value.
+         * @param val    Initialize all elements to this value.
          *
-         * @param layout    The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
+         * @param layout The layout to use, either [ROW_MAJOR](@ref MArray::ROW_MAJOR) or [COLUMN_MAJOR](@ref MArray::COLUMN_MAJOR).
          *
-         * @param base    The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
-         *                [MATLAB](@ref MArray::MATLAB)).
+         * @param base   The base to use, either [BASE_ZERO](@ref MArray::BASE_ZERO) or
+         *               [BASE_ONE](@ref MArray::BASE_ONE) (a.k.a. [FORTRAN](@ref MArray::FORTRAN) or
+         *               [MATLAB](@ref MArray::MATLAB)).
+         *
+         * @return       A reference to the marray.
          */
-        void reset(const array_1d<len_type>& len, const Type& val, layout layout, MArray::index_base base)
+        marray& reset(const array_1d<len_type>& len, const Type& val, layout layout, MArray::index_base base)
         {
-            reset(len, val, base, layout);
+            return reset(len, val, base, layout);
         }
 
         /**
          * Re-initialize to a tensor of the specified shape and FORTRAN/MATLAB layout.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len     The length of each dimension. May be any one-dimensional
+         *                container type with elements convertible to tensor
+         *                lengths, including initializer lists.
          *
-         * @param fortran    The token [FORTRAN](@ref MArray::FORTRAN).
+         * @param fortran The token [FORTRAN](@ref MArray::FORTRAN).
+         *
+         * @return        A reference to the marray.
          */
 #if MARRAY_DOXYGEN
-        void reset(const array_1d<len_type>& len, fortran_t fortran)
+        marray& reset(const array_1d<len_type>& len, fortran_t fortran)
 #else
-        void reset(const array_1d<len_type>& len, fortran_t)
+        marray& reset(const array_1d<len_type>& len, fortran_t)
 #endif
         {
-            reset(len, Type(), BASE_ONE, COLUMN_MAJOR);
+            return reset(len, Type(), BASE_ONE, COLUMN_MAJOR);
         }
 
         /**
          * Re-initialize to a tensor of the specified shape in FORTRAN/MATLAB layout, with the given fill value.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len     The length of each dimension. May be any one-dimensional
+         *                container type with elements convertible to tensor
+         *                lengths, including initializer lists.
          *
-         * @param val       Initialize all elements to this value.
+         * @param val     Initialize all elements to this value.
          *
-         * @param fortran    The token [FORTRAN](@ref MArray::FORTRAN).
+         * @param fortran The token [FORTRAN](@ref MArray::FORTRAN).
+         *
+         * @return        A reference to the marray.
          */
 #if MARRAY_DOXYGEN
-        void reset(const array_1d<len_type>& len, const Type& val, fortran_t fortran)
+        marray& reset(const array_1d<len_type>& len, const Type& val, fortran_t fortran)
 #else
-        void reset(const array_1d<len_type>& len, const Type& val, fortran_t)
+        marray& reset(const array_1d<len_type>& len, const Type& val, fortran_t)
 #endif
         {
-            reset(len, val, BASE_ONE, COLUMN_MAJOR);
+            return reset(len, val, BASE_ONE, COLUMN_MAJOR);
         }
 
         /**
          * Re-initialize to a tensor of the specified shape in FORTRAN/MATLAB layout,
          * without initializing tensor elements.
          *
-         * @param len   The length of each dimension. May be any one-dimensional
-         *              container type with elements convertible to tensor
-         *              lengths, including initializer lists.
+         * @param len           The length of each dimension. May be any one-dimensional
+         *                      container type with elements convertible to tensor
+         *                      lengths, including initializer lists.
          *
-         * @param uninitialized   The token @ref uninitialized.
+         * @param uninitialized The token @ref uninitialized.
          *
-         * @param fortran    The token [FORTRAN](@ref MArray::FORTRAN).
+         * @param fortran       The token [FORTRAN](@ref MArray::FORTRAN).
+         *
+         * @return              A reference to the marray.
          */
 #if MARRAY_DOXYGEN
-        void reset(const array_1d<len_type>& len, uninitialized_t uninitialized, fortran_t fortran)
+        marray& reset(const array_1d<len_type>& len, uninitialized_t uninitialized, fortran_t fortran)
 #else
-        void reset(const array_1d<len_type>& len, uninitialized_t, fortran_t)
+        marray& reset(const array_1d<len_type>& len, uninitialized_t, fortran_t)
 #endif
         {
-            reset(len, uninitialized, BASE_ONE, COLUMN_MAJOR);
+            return reset(len, uninitialized, BASE_ONE, COLUMN_MAJOR);
         }
 
         /**
@@ -1262,17 +1331,20 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
          * @param layout The layout to use, either #ROW_MAJOR or #COLUMN_MAJOR.
          *               If not specified, use the default layout.
          *
-         * @note Only available when `NDim != ` [DYNAMIC](@ref MArray::DYNAMIC) or 1.
+         * @return       A reference to the marray.
+         *
+         * @note         Only available when `NDim != ` [DYNAMIC](@ref MArray::DYNAMIC) or 1.
          */
 #if !MARRAY_DOXYGEN
-        template <int NDim_=NDim, typename=std::enable_if_t<NDim_!=1 && NDim_ != DYNAMIC>>
+        template <int NDim_=NDim, typename=std::enable_if_t<NDim_!=1 && NDim_ != DYNAMIC>,marray&>
 #endif
-        void reset(initializer_type data, layout layout = DEFAULT_LAYOUT)
+        marray& reset(initializer_type data, layout layout = DEFAULT_LAYOUT)
         {
             detail::array_type_t<len_type, NDim> len(NDim);
             base_class::set_lengths_(0, len, data);
             reset(len, layout);
             base_class::set_data_(0, data_, data);
+            return *this;
         }
 
         /** @} */
@@ -1292,18 +1364,21 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
          * This function always reallocates and copies data, so any pointers or
          * references to elements are invalidated.
          *
-         * @param len   The lengths of the dimensions are resizing.
+         * @param len The lengths of the dimensions are resizing.
          *
-         * @param val   The value to use for initializing new element (those
-         *              whose indices fall outside the bounds of the original
-         *              shape). If not specified, value-initialization is used.
+         * @param val The value to use for initializing new element (those
+         *            whose indices fall outside the bounds of the original
+         *            shape). If not specified, value-initialization is used.
+         *
+         * @return    A reference to the marray.
          */
-        void resize(const array_1d<len_type>& len, const Type& val=Type())
+        marray& resize(const array_1d<len_type>& len, const Type& val=Type())
         {
             detail::array_type_t<len_type, NDim> new_len;
             len.slurp(new_len);
 
-            if (new_len == len_) return;
+            if (new_len == len_)
+                return *this;
 
             marray a(std::move(*this));
 
@@ -1324,6 +1399,8 @@ class marray : public marray_base<Type, NDim, marray<Type, NDim, Allocator>, tru
             }
 
             b = a;
+
+            return *this;
         }
 
         /** @} */

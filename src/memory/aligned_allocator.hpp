@@ -57,6 +57,9 @@ template <typename T, size_t N=8> struct aligned_allocator
 template <typename T, size_t N, typename U, size_t M>
 bool operator==(const aligned_allocator<T, N>&, const aligned_allocator<U, M>&) { return true; }
 
+template <typename T, size_t N, typename U, size_t M>
+bool operator!=(const aligned_allocator<T, N>&, const aligned_allocator<U, M>&) { return false; }
+
 }
 
 #endif
