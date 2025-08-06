@@ -359,11 +359,23 @@ else()
         file(MAKE_DIRECTORY ${BLIS_INSTALL_DIR}/include/blis)
     endif()
 
+    # Add + to the Make recipe line if CMake is new enough.
+    # This enables parallel compilation of the plugin.
+    # It does nothing if the generator isn't Make.
+    # Tested with CMake<3.28 and >=3.28
+    # See the CMake documentation for "add_custom_command"
+    # (Since you need Make anyway, it's a good idea to use it as the generator.)
+    set(TBLIS_JOBSERVER_AWARE_ARG "")
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28.0")
+      set(TBLIS_JOBSERVER_AWARE_ARG JOB_SERVER_AWARE TRUE)
+    endif()
+
     add_custom_command(
         COMMAND ${MAKE_EXECUTABLE} install
         OUTPUT
             ${BLIS_INSTALL_DIR}/lib/libblis.a
             ${BLIS_INSTALL_DIR}/include/blis/blis.h
+        ${TBLIS_JOBSERVER_AWARE_ARG}
         COMMENT "Building BLIS"
         WORKING_DIRECTORY ${BLIS_BINARY_DIR}
     )
@@ -448,6 +460,7 @@ add_custom_target(plugin-configure
 add_custom_command(
     OUTPUT ${TBLIS_PLUGIN_DIR}/lib/${BLIS_CONFIG_FAMILY}/libblis_tblis.a
     COMMAND ${MAKE_EXECUTABLE}
+    ${TBLIS_JOBSERVER_AWARE_ARG}
     DEPENDS plugin-configure
     COMMENT "Building BLIS plugin"
     WORKING_DIRECTORY ${TBLIS_PLUGIN_DIR}
