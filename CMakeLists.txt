@@ -59,9 +59,9 @@ option(ENABLE_STATIC "Build a static library" ON)
 option(ENABLE_COMPAT "Enable compatibility with the TBLIS 1.x interface" OFF)
 set(TBLIS_ENABLE_COMPAT ${ENABLE_COMPAT})
 
-option(ENABLE_MEMKIND OFF "Enable use of the memkind library for MCDRAM allocation if supported.")
+option(ENABLE_MEMKIND "Enable use of the memkind library for MCDRAM allocation if supported." OFF)
 
-option(ENABLE_HWLOC ON "Enable use of the memkind library for MCDRAM allocation if supported.")
+option(ENABLE_HWLOC "Enable use of the hwloc library for hardware locality awareness." ON)
 
 set(BLIS_CONFIG_FAMILY auto CACHE STRING "BLIS sub-configuration to use.")
 
