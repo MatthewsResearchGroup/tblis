@@ -59,11 +59,13 @@ option(ENABLE_STATIC "Build a static library" ON)
 option(ENABLE_COMPAT "Enable compatibility with the TBLIS 1.x interface" OFF)
 set(TBLIS_ENABLE_COMPAT ${ENABLE_COMPAT})
 
-option(ENABLE_MEMKIND OFF "Enable use of the memkind library for MCDRAM allocation if supported.")
+option(ENABLE_MEMKIND "Enable use of the memkind library for MCDRAM allocation if supported." OFF)
 
-option(ENABLE_HWLOC ON "Enable use of the memkind library for MCDRAM allocation if supported.")
+option(ENABLE_HWLOC "Enable use of the hwloc library for hardware locality awareness." ON)
 
 set(BLIS_CONFIG_FAMILY auto CACHE STRING "BLIS sub-configuration to use.")
+
+set(BLIS_THREAD_MODEL pthread CACHE STRING "BLIS threading model to use.")
 
 set(LENGTH_TYPE ptrdiff_t CACHE STRING "The type to use for lengths of tensor dimensions. Must be a signed ISO C integer type.")
 
@@ -353,10 +355,21 @@ else()
                 ${BLIS_DEBUG_FLAG}
                 --disable-blas
                 --disable-cblas
-                "--enable-threading=pthread"
+                "--enable-threading=${BLIS_THREAD_MODEL}"
                 ${BLIS_CONFIG_FAMILY}
         )
         file(MAKE_DIRECTORY ${BLIS_INSTALL_DIR}/include/blis)
+    endif()
+
+    # Add + to the Make recipe line if CMake is new enough.
+    # This enables parallel compilation of the plugin.
+    # It does nothing if the generator isn't Make.
+    # Tested with CMake<3.28 and >=3.28
+    # See the CMake documentation for "add_custom_command"
+    # (Since you need Make anyway, it's a good idea to use it as the generator.)
+    set(TBLIS_JOBSERVER_AWARE_ARG "")
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28.0")
+      set(TBLIS_JOBSERVER_AWARE_ARG JOB_SERVER_AWARE TRUE)
     endif()
 
     add_custom_command(
@@ -364,6 +377,7 @@ else()
         OUTPUT
             ${BLIS_INSTALL_DIR}/lib/libblis.a
             ${BLIS_INSTALL_DIR}/include/blis/blis.h
+        ${TBLIS_JOBSERVER_AWARE_ARG}
         COMMENT "Building BLIS"
         WORKING_DIRECTORY ${BLIS_BINARY_DIR}
     )
@@ -448,6 +462,7 @@ add_custom_target(plugin-configure
 add_custom_command(
     OUTPUT ${TBLIS_PLUGIN_DIR}/lib/${BLIS_CONFIG_FAMILY}/libblis_tblis.a
     COMMAND ${MAKE_EXECUTABLE}
+    ${TBLIS_JOBSERVER_AWARE_ARG}
     DEPENDS plugin-configure
     COMMENT "Building BLIS plugin"
     WORKING_DIRECTORY ${TBLIS_PLUGIN_DIR}
