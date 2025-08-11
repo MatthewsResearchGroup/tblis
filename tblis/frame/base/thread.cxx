@@ -1,5 +1,5 @@
 #include "tblis.h"
-
+#include "tblis/frame/base/env.hpp"
 #include "tblis/plugin/bli_plugin_tblis.h"
 
 #if TBLIS_HAVE_SYSCTL
@@ -35,6 +35,8 @@ struct thread_configuration
         if (str)
         {
             num_threads = strtol(str, NULL, 10);
+            if(tblis::get_verbose() > 0)
+                fprintf(stderr, "setting nt from environment variable: %d\n", num_threads);
         }
         else
         {
@@ -44,12 +46,9 @@ struct thread_configuration
             hwloc_topology_init(&topo);
             hwloc_topology_load(topo);
 
-            int depth = hwloc_get_cache_type_depth(topo, 1, HWLOC_OBJ_CACHE_DATA);
-            if (depth != HWLOC_TYPE_DEPTH_UNKNOWN)
-            {
-                num_threads = hwloc_get_nbobjs_by_depth(topo, depth);
-                printf("nt: %d\n", num_threads);
-            }
+            num_threads = hwloc_get_nbobjs_by_type(topo, HWLOC_OBJ_CORE);
+            if(tblis::get_verbose() > 0)
+                fprintf(stderr, "setting nt with hwloc: %d\n", num_threads);
 
             hwloc_topology_destroy(topo);
 
@@ -59,11 +58,13 @@ struct thread_configuration
 
             std::string s;
             int c;
-            while ((c = fgetc(fd)) != EOF) s.push_back(c+1);
+            while ((c = fgetc(fd)) != EOF) s.push_back(c);
 
             pclose(fd);
 
-            num_threads = strtol(s.c_str(), NULL, 10);
+            num_threads = strtol(s.c_str(), NULL, 10) + 1;
+            if(tblis::get_verbose() > 0)
+                fprintf(stderr, "setting nt with lscpu: %d\n", num_threads);
 
             #elif TBLIS_HAVE_SYSCTLBYNAME
 
@@ -73,10 +74,14 @@ struct thread_configuration
             #elif TBLIS_HAVE_SYSCONF && TBLIS_HAVE__SC_NPROCESSORS_ONLN
 
             num_threads = sysconf(_SC_NPROCESSORS_ONLN);
+            if(tblis::get_verbose() > 0)
+                fprintf(stderr, "setting nt with _SC_NPROCESSORS_ONLN: %d\n", num_threads);
 
             #elif TBLIS_HAVE_SYSCONF && TBLIS_HAVE__SC_NPROCESSORS_CONF
 
             num_threads = sysconf(_SC_NPROCESSORS_CONF);
+            if(tblis::get_verbose() > 0)
+                fprintf(stderr, "setting nt with _SC_NPROCESSORS_CONF: %d\n", num_threads);
 
             #endif
         }
