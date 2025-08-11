@@ -658,6 +658,7 @@ enable_memkind
 enable_hwloc
 enable_threading
 with_blis_config_family
+with_blis_thread_model
 with_length_type
 with_stride_type
 with_label_type
@@ -1303,6 +1304,9 @@ Optional Packages:
   --with-blis-config-family=config
                           use the specific BLIS sub-configuration
                           [default=auto]
+  --with-blis-thread-model=model
+                          use the specific BLIS sub-configuration
+                          [default=pthread]
   --with-length-type=type use 'type' for the default index length type
                           [default=ptrdiff_t]
   --with-stride-type=type use 'type' for the default index stride type
@@ -1852,6 +1856,18 @@ fi
 if test ${with_blis_config_family+y}
 then :
   withval=$with_blis_config_family; ax_cv_cmake_flags="$ax_cv_cmake_flags -DBLIS_CONFIG_FAMILY=${with_blis_config_family}"
+fi
+
+
+
+
+
+
+
+# Check whether --with-blis-thread-model was given.
+if test ${with_blis_thread_model+y}
+then :
+  withval=$with_blis_thread_model; ax_cv_cmake_flags="$ax_cv_cmake_flags -DBLIS_THREAD_MODEL=${with_blis_thread_model}"
 fi
 
 

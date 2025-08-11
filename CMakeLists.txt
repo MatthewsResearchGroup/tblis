@@ -65,6 +65,8 @@ option(ENABLE_HWLOC "Enable use of the hwloc library for hardware locality aware
 
 set(BLIS_CONFIG_FAMILY auto CACHE STRING "BLIS sub-configuration to use.")
 
+set(BLIS_THREAD_MODEL pthread CACHE STRING "BLIS threading model to use.")
+
 set(LENGTH_TYPE ptrdiff_t CACHE STRING "The type to use for lengths of tensor dimensions. Must be a signed ISO C integer type.")
 
 set(STRIDE_TYPE ptrdiff_t CACHE STRING "The type to use for strides of tensor dimensions. Must be a signed ISO C integer type.")
@@ -353,7 +355,7 @@ else()
                 ${BLIS_DEBUG_FLAG}
                 --disable-blas
                 --disable-cblas
-                "--enable-threading=pthread"
+                "--enable-threading=${BLIS_THREAD_MODEL}"
                 ${BLIS_CONFIG_FAMILY}
         )
         file(MAKE_DIRECTORY ${BLIS_INSTALL_DIR}/include/blis)

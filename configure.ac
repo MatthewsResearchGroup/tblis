@@ -24,6 +24,9 @@ AX_CMAKE_ENABLE([threading], AS_HELP_STRING([--enable-threading=<type>],
 AX_CMAKE_WITH([blis-config-family], AS_HELP_STRING([--with-blis-config-family=config],
     [use the specific BLIS sub-configuration @<:@default=auto@:>@]))
 
+AX_CMAKE_WITH([blis-thread-model], AS_HELP_STRING([--with-blis-thread-model=model],
+    [use the specific BLIS sub-configuration @<:@default=pthread@:>@]))
+
 AX_CMAKE_WITH([length-type], AS_HELP_STRING([--with-length-type=type],
     [use 'type' for the default index length type @<:@default=ptrdiff_t@:>@]))
 
